@@ -1,0 +1,33 @@
+# Project
+**/node_modules/*
+**/Intermediate/*
+**/Binaries/*
+!/Binaries/Win64
+/Binaries/Win64/*
+!/Binaries/Win64/TsuParser.exe
+!/Binaries/ThirdParty
+/Binaries/ThirdParty/**/*.pdb
+
+# Windows
+Thumbs.db
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Misc
+*.bak
+*.gho
+*.ori
+*.orig
+*.tmp

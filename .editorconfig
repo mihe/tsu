@@ -1,0 +1,25 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = tab
+indent_size = tab
+tab_width = 4
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = false
+max_line_length = off
+
+[{*.uproject,*.uplugin}]
+tab_width = 2
+insert_final_newline = unset
+
+[*.ini]
+insert_final_newline = unset
+
+[*.md]
+indent_style = space
+
+[{*.json,*.yml,*.html,.clang-format}]
+tab_width = 2
+indent_style = space

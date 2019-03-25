@@ -1,0 +1,133 @@
+---
+BasedOnStyle: LLVM
+
+# General
+DisableFormat: false
+Language: Cpp
+Standard: Cpp11
+TabWidth: 4
+UseTab: Always
+
+# Braces
+Cpp11BracedListStyle: true
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+
+# Indentation
+AccessModifierOffset: -4
+ColumnLimit: 0
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+IndentCaseLabels: false
+IndentPPDirectives: None
+IndentWidth: 4
+IndentWrappedFunctionNames: false
+NamespaceIndentation: None
+
+# Spaces
+SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: false
+SpacesInContainerLiterals: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+# Newlines/Packing
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: true
+AlwaysBreakTemplateDeclarations: true
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: BeforeComma
+BreakStringLiterals: true
+CommentPragmas: ''
+CompactNamespaces: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ExperimentalAutoDetectBinPacking: false
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+ReflowComments: true
+
+# Pointers
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+# Includes
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^".*\.generated\.h"$'
+    Priority: 4
+  - Regex: '"CoreMinimal.h"'
+    Priority: 1
+  - Regex: '["\/]Tsu.*"$'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 3
+IncludeIsMainRegex: ''
+SortIncludes: true
+
+# Alignment
+AlignAfterOpenBracket: AlwaysBreak
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlines: Left
+AlignOperands: false
+AlignTrailingComments: false
+
+# Macros
+ForEachMacros: []
+MacroBlockBegin: ''
+MacroBlockEnd: ''
+StatementMacros: []
+
+# Misc
+FixNamespaceComments: true
+RawStringFormats: []
+SortUsingDeclarations: true
+
+# AlwaysBreakAfterDefinitionReturnType
+# BreakAfterJavaFieldAnnotations
+# JavaImportGroups
+# JavaScriptQuotes
+# JavaScriptWrapImports
+# ObjCBinPackProtocolList
+# ObjCBlockIndentWidth
+# ObjCSpaceAfterProperty
+# ObjCSpaceBeforeProtocolList
+# PenaltyBreakAssignment
+# PenaltyBreakBeforeFirstCallParameter
+# PenaltyBreakComment
+# PenaltyBreakFirstLessLess
+# PenaltyBreakString
+# PenaltyBreakTemplateDeclaration
+# PenaltyExcessCharacter
+# PenaltyReturnTypeOnItsOwnLine
+...

@@ -1,0 +1,43 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.1.0",
+	"FriendlyName": "TypeScript for Unreal",
+	"Description": "Adds TypeScript support to Blueprint",
+	"Category": "Scripting",
+	"CreatedBy": "Mikael Hermansson",
+	"CreatedByURL": "https://github.com/mihe",
+	"DocsURL": "https://github.com/mihe/tsu",
+	"SupportURL": "https://github.com/mihe/tsu/issues",
+	"EnabledByDefault": false,
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"CanBeUsedWithUnrealHeaderTool": false,
+	"Modules": [
+		{
+			"Name": "TsuUtilities",
+			"Type": "Runtime",
+			"LoadingPhase": "PostConfigInit",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
+		},
+		{
+			"Name": "TsuRuntime",
+			"Type": "Runtime",
+			"LoadingPhase": "PostConfigInit",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
+		},
+		{
+			"Name" : "TsuEditor",
+			"Type" : "Editor",
+			"LoadingPhase" : "PreEarlyLoadingScreen",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
+		}
+	]
+}
