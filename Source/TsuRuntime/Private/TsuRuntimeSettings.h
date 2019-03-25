@@ -4,7 +4,7 @@
 
 #include "TsuRuntimeSettings.generated.h"
 
-UCLASS(config=Game, ClassGroup=TSU)
+UCLASS(config=Game, defaultconfig, ClassGroup=TSU)
 class UTsuRuntimeSettings final
 	: public UObject
 {
