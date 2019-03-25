@@ -11,6 +11,7 @@ Need help with something? Join us on [Discord][dsc].
 - [Features](#features)
 - [Downloads](#downloads)
 - [Setup](#setup)
+- [Quirks](#quirks)
 - [Motivation](#motivation)
 - [Building](#building)
 - [License](#license)
@@ -198,6 +199,10 @@ Lastly you'll want to add support for `@types` in your `tsconfig.json` by adding
 ],
 ```
 
+## Quirks
+
+There are some inherent quirks with mapping a scripting language to Blueprint that might be good to know before diving too deep into TSU, check out [the wiki][wki] for more details.
+
 ## Motivation
 
 _"Augmenting Blueprint rather than replacing it."_
@@ -277,3 +282,4 @@ TypeScript for Unreal is licensed under the 3-clause BSD license. See the [LICEN
 [vsc]: https://code.visualstudio.com/
 [vss]: https://docs.unrealengine.com/en-us/Programming/Development/VisualStudioSetup
 [wbs]: https://www.jetbrains.com/webstorm/
+[wki]: https://github.com/mihe/tsu/wiki/Quirks
