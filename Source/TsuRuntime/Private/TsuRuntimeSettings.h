@@ -13,7 +13,7 @@ class UTsuRuntimeSettings final
 public:
 	/** Whether or not to use a DefaultToSelf parameter */
 	UPROPERTY(EditAnywhere, Config, Category="Compilation", Meta=(ConfigRestartRequired=true))
-	bool bUseSelfParameter = true;
+	bool bUseSelfParameter = false;
 
 	/** The name of the parameter that should get the 'DefaultToSelf' metadata assigned to it */
 	UPROPERTY(EditAnywhere, Config, Category="Compilation", Meta=(ConfigRestartRequired=true, EditCondition="bUseSelfParameter"))
