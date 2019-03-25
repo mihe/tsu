@@ -77,11 +77,11 @@ Battle-tested technologies make up the foundation of TSU, such as the V8 JavaScr
 
 ## Downloads
 
-_(TSU will be up on [Unreal Marketplace][mkt] once it's in beta)._
+_(TSU is not currently on [Unreal Marketplace][mkt], but will be once it's in beta)._
 
 Please note that **currently**...
 
-- TSU is in its **alpha** stage
+- TSU is in **alpha**
 - TSU has **only** been tested with **Unreal Engine 4.21**
 - You can **not** use TSU outside of Win64 **editor** builds
 - You can **not** use TSU in packaged/cooked builds
@@ -163,7 +163,7 @@ TSU listens for V8 debuggers on port 19216. So you'll want a `Content/Scripts/.v
 }
 ```
 
-The most important part here, outside of the port number, is `sourceMaps` and `sourceMapPathOverrides`. Without these you won't be able to put breakpoints in your TypeScript files.
+The most important part here, outside of the port number, is `sourceMaps` and `sourceMapPathOverrides`. Without these you won't be able to set breakpoints in your TypeScript files.
 
 ### Node.js packages
 
@@ -175,7 +175,7 @@ First off, add the following reimport exclusions (as seen above):
 - `Scripts/package.json`
 - `Scripts/package-lock.json`
 
-Make sure you hade [Node.js][njs] installed.
+Also make sure you have [Node.js][njs] installed.
 
 Then you'll want to add a `package.json` (if you don't have one already). In `Content/Scripts` run:
 
@@ -217,7 +217,7 @@ The choice of TypeScript came out of wanting a language that had a sufficient en
 
 ## Building
 
-_(This only applies if you're not using the pre-built binaries found in [Releases][rls])._
+_(This only applies if you're **not** using the pre-built binaries found in [Releases][rls])._
 
 ### Prerequisites
 
