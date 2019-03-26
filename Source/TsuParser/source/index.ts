@@ -47,12 +47,11 @@ interface ScriptVersion {
 	modifiedTime: number;
 }
 
-const arg = process.argv[2];
-if (typeof arg !== 'string') {
-	throw new Error('Invalid project directory specified');
+if (process.argv.length < 3) {
+	throw new Error('No project directory specified');
 }
 
-const projectDirectory = path.resolve(arg);
+const projectDirectory = path.resolve(process.argv[2]);
 const responseCache = new Map<string, string>();
 const scriptFileNames = new Array<string>();
 const scriptVersions = new Map<string, ScriptVersion>();
@@ -94,23 +93,22 @@ function findCompilerOptions() {
 function formatDiagnostic(diagnostic: ts.Diagnostic) {
 	const msg = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
 
-	if (diagnostic.file) {
-		const pos = diagnostic.file.getLineAndCharacterOfPosition(
-			diagnostic.start || 0
-		);
-
-		const file = path.basename(diagnostic.file.fileName);
-		const line = pos.line + 1;
-		const char = pos.character + 1;
-		const category = diagnostic.category;
-		const type = ts.DiagnosticCategory[category].toLowerCase();
-		const code = diagnostic.code;
-
-		return `[TS]: ${file}(${line},${char}): ${type} TS${code}: ${msg}`;
-	}
-	else {
+	if (!diagnostic.file) {
 		return `[TS]: ${msg}`;
 	}
+
+	const pos = diagnostic.file.getLineAndCharacterOfPosition(
+		diagnostic.start || 0
+	);
+
+	const file = path.basename(diagnostic.file.fileName);
+	const line = pos.line + 1;
+	const char = pos.character + 1;
+	const category = diagnostic.category;
+	const type = ts.DiagnosticCategory[category].toLowerCase();
+	const code = diagnostic.code;
+
+	return `[TS]: ${file}(${line},${char}): ${type} TS${code}: ${msg}`;
 }
 
 function createLanguageService() {
@@ -125,7 +123,7 @@ function createLanguageService() {
 			if (cachedSnapshot) { return cachedSnapshot; }
 
 			const fileContent = ts.sys.readFile(fileName);
-			if (fileContent == undefined) {
+			if (fileContent === undefined) {
 				scriptVersions.delete(fileName);
 				return undefined;
 			}
@@ -191,12 +189,12 @@ function parseFile(filePath: string): Response {
 	}
 
 	const program = languageService.getProgram();
-	if (program == undefined) {
+	if (program === undefined) {
 		throw new Error('Failed to get program');
 	}
 
 	const sourceFile = program.getSourceFile(filePath);
-	if (sourceFile == undefined) {
+	if (sourceFile === undefined) {
 		throw new Error(`Failed to get source file: ${filePath}`);
 	}
 
@@ -229,7 +227,7 @@ function parseFile(filePath: string): Response {
 	const functions = (
 		sourceFile.statements
 			.filter(ts.isFunctionDeclaration)
-			.filter(f => f.body != undefined)
+			.filter(f => f.body !== undefined)
 			.filter(isExported)
 			.map(declaration =>
 				parseFunction(
@@ -315,7 +313,7 @@ function parseParameter(
 	const type = typeChecker.getTypeAtLocation(param.type!);
 	const types = parseType(typeChecker.typeToString(type));
 	const optional = (
-		param.initializer == undefined
+		param.initializer === undefined
 			? typeChecker.isOptionalParameter(param)
 			: false
 	);

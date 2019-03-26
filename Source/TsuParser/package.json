@@ -6,7 +6,7 @@
     "package": "pkg --public --targets win --output ../../Binaries/Win64/TsuParser.exe ."
   },
   "devDependencies": {
-    "@types/node": "11.11.6",
+    "@types/node": "10.14.4",
     "@types/source-map-support": "0.5.0",
     "pkg": "4.3.7",
     "tslint": "5.14.0",
