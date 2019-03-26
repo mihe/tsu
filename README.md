@@ -36,12 +36,12 @@ Functions written in TypeScript look and behave just like regular Blueprint func
 
 ![Example][exb]
 
-### Typings
+### Generated typings
 
-Type declarations (or "typings") are generated on-the-fly to make sure everything in Blueprint is available from TypeScript.
+Type declarations (or "typings") are generated on-the-fly to make sure everything from Blueprint is available in TypeScript in a type-safe manner.
 
 ```ts
-// Intermediate/Typings/BP_Cube/index.d.ts
+// Example of a generated typing, found in 'Intermediate/Typings'
 
 import { Actor } from 'UE/Actor';
 import { Class } from 'UE/Class';
