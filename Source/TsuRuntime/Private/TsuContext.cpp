@@ -909,9 +909,9 @@ void FTsuContext::OnPostGarbageCollect()
 
 v8::Local<v8::Value> FTsuContext::StartTimeout(v8::Local<v8::Function> Callback, float Delay, bool bLoop)
 {
-	v8::Local<v8::Value> WorldContext_ = GetWorldContext();
+	v8::Local<v8::Value> WorldContextValue = GetWorldContext();
 	UObject* WorldContext = nullptr;
-	TsuContext_Private::GetInternalFields(WorldContext_, &WorldContext);
+	TsuContext_Private::GetInternalFields(WorldContextValue, &WorldContext);
 
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::LogAndReturnNull);
 	if (!World)
@@ -1436,8 +1436,7 @@ void FTsuContext::OnGetStructImpl(const v8::FunctionCallbackInfo<v8::Value>& Inf
 		return;
 
 	void* Self = nullptr;
-	UStruct* Type = nullptr;
-	if (!ensureV8(TsuContext_Private::GetInternalFields(Info[0], &Self, &Type)))
+	if (!ensureV8(TsuContext_Private::GetInternalFields(Info[0], &Self)))
 		return;
 
 	UProperty* Property = nullptr;
@@ -1453,8 +1452,7 @@ void FTsuContext::OnSetStructImpl(const v8::FunctionCallbackInfo<v8::Value>& Inf
 		return;
 
 	void* Self = nullptr;
-	UStruct* Type = nullptr;
-	if (!ensureV8(TsuContext_Private::GetInternalFields(Info[0], &Self, &Type)))
+	if (!ensureV8(TsuContext_Private::GetInternalFields(Info[0], &Self)))
 		return;
 
 	UProperty* Property = nullptr;
