@@ -482,23 +482,24 @@ void FTsuContext::InitializeArrayProxy()
 
 	// clang-format off
 	// #todo(#mihe): Move this to its own file somehow
+	// #todo(#mihe): Implement the rest of the traps for this handler?
 	constexpr TCHAR HandlerCode[] =
 		TEXT("(class {")
-		TEXT("    constructor(impl) {")
-		TEXT("        this._impl = impl;")
+		TEXT("    constructor(actualArray) {")
+		TEXT("        this.actualArray = actualArray;")
 		TEXT("    }")
 		TEXT("    get(_, key) {")
 		TEXT("        if (key === 'length') {")
-		TEXT("            return this._impl.length;")
+		TEXT("            return this.actualArray.length;")
 		TEXT("        }")
-		TEXT("        return Array.prototype[key] || this._impl[key];")
+		TEXT("        return Array.prototype[key] || this.actualArray[key];")
 		TEXT("    }")
 		TEXT("    set(_, key, value) {")
-		TEXT("        this._impl[key] = value;")
+		TEXT("        this.actualArray[key] = value;")
 		TEXT("        return true;")
 		TEXT("    }")
 		TEXT("    has(_, key) {")
-		TEXT("        return (key in Array.prototype) || (key in this._impl);")
+		TEXT("        return (key in Array.prototype) || (key in this.actualArray);")
 		TEXT("    }")
 		TEXT("})");
 	// clang-format on
@@ -524,36 +525,36 @@ void FTsuContext::InitializeStructProxy()
 	// #todo(#mihe): Move this to its own file somehow
 	constexpr TCHAR HandlerCode[] =
 		TEXT("(class {")
-		TEXT("    constructor(parent, property) {")
-		TEXT("        this._parent = parent;")
-		TEXT("        this._property = property;")
+		TEXT("    constructor(parentObject, parentKey) {")
+		TEXT("        this.parentObject = parentObject;")
+		TEXT("        this.parentKey = parentKey;")
 		TEXT("    }")
-		TEXT("    get target() {")
-		TEXT("        return __get(this._parent, this._property);")
+		TEXT("    get actualObject() {")
+		TEXT("        return __get(this.parentObject, this.parentKey);")
 		TEXT("    }")
-		TEXT("    set target(value) {")
-		TEXT("        __set(this._parent, this._property, value);")
+		TEXT("    set actualObject(value) {")
+		TEXT("        __set(this.parentObject, this.parentKey, value);")
 		TEXT("    }")
 		TEXT("    get(_, key) {")
-		TEXT("        return this.target[key];")
+		TEXT("        return this.actualObject[key];")
 		TEXT("    }")
 		TEXT("    set(_, key, value) {")
-		TEXT("        const target = this.target;")
-		TEXT("        target[key] = value;")
-		TEXT("        this.target = target;")
+		TEXT("        const actualObject = this.actualObject;")
+		TEXT("        actualObject[key] = value;")
+		TEXT("        this.actualObject = actualObject;")
 		TEXT("        return true;")
 		TEXT("    }")
-		TEXT("    has(_, key) { return key in this.target; }")
-		TEXT("    getPrototypeOf(_) { return Object.getPrototypeOf(this.target); }")
-		TEXT("    setPrototypeOf(_, value) { return Object.setPrototypeOf(this.target, value); }")
-		TEXT("    isExtensible(_) { return Object.isExtensible(this.target); }")
-		TEXT("    preventExtensions(_) { return Object.preventExtensions(this.target); }")
-		TEXT("    getOwnPropertyDescriptor(_, key) { return Object.getOwnPropertyDescriptor(this.target, key); }")
-		TEXT("    deleteProperty(_, key) { delete this.target[key]; }")
-		TEXT("    defineProperty(_, key, attributes) { return Object.defineProperty(this.target, key, attributes); }")
-		TEXT("    enumerate(_) { return Reflect.enumerate(this.target); }")
-		TEXT("    ownKeys(_) { return Reflect.ownKeys(this.target); }")
-		TEXT("    apply(_, thisArg, args) { return this.target.apply(thisArg, args); }")
+		TEXT("    has(_, key) { return key in this.actualObject; }")
+		TEXT("    getPrototypeOf(_) { return Object.getPrototypeOf(this.actualObject); }")
+		TEXT("    setPrototypeOf(_, value) { return Object.setPrototypeOf(this.actualObject, value); }")
+		TEXT("    isExtensible(_) { return Object.isExtensible(this.actualObject); }")
+		TEXT("    preventExtensions(_) { return Object.preventExtensions(this.actualObject); }")
+		TEXT("    getOwnPropertyDescriptor(_, key) { return Object.getOwnPropertyDescriptor(this.actualObject, key); }")
+		TEXT("    deleteProperty(_, key) { delete this.actualObject[key]; }")
+		TEXT("    defineProperty(_, key, attributes) { return Object.defineProperty(this.actualObject, key, attributes); }")
+		TEXT("    enumerate(_) { return Reflect.enumerate(this.actualObject); }")
+		TEXT("    ownKeys(_) { return Reflect.ownKeys(this.actualObject); }")
+		TEXT("    apply(_, thisArg, args) { return this.actualObject.apply(thisArg, args); }")
 		TEXT("})");
 	// clang-format on
 
@@ -1815,7 +1816,7 @@ v8::Local<v8::Value> FTsuContext::UnwrapStructProxy(const v8::Local<v8::Value>& 
 	v8::Local<v8::Proxy> Proxy = Value.As<v8::Proxy>();
 	v8::Local<v8::Object> Handler = Proxy->GetHandler().As<v8::Object>();
 
-	return Handler->Get(Isolate->GetCurrentContext(), u"target"_v8).ToLocalChecked();
+	return Handler->Get(Isolate->GetCurrentContext(), u"actualObject"_v8).ToLocalChecked();
 }
 
 void FTsuContext::PopArgumentsFromStack(FFrame& Stack, UFunction* Function, TArray<v8::Local<v8::Value>>& OutArguments)
