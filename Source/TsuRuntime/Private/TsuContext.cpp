@@ -383,8 +383,8 @@ void FTsuContext::InitializeBuiltins()
 	SetMethod(Context, Global, u"clearInterval"_v8, &FTsuContext::OnClearTimeout);
 	SetMethod(Context, Global, u"__require"_v8, &FTsuContext::OnRequire);
 	SetMethod(Context, Global, u"__import"_v8, &FTsuContext::OnImport);
-	SetMethod(Context, Global, u"__get"_v8, &FTsuContext::OnGetStruct);
-	SetMethod(Context, Global, u"__set"_v8, &FTsuContext::OnSetStruct);
+	SetMethod(Context, Global, u"__getProperty"_v8, &FTsuContext::OnGetProperty);
+	SetMethod(Context, Global, u"__setProperty"_v8, &FTsuContext::OnSetProperty);
 
 	v8::Local<v8::Object> Console = v8::Object::New(Isolate);
 	SetMethod(Context, Console, u"log"_v8, &FTsuContext::OnConsoleLog);
@@ -533,10 +533,10 @@ void FTsuContext::InitializeStructProxy()
 		TEXT("        this.parentKey = parentKey;")
 		TEXT("    }")
 		TEXT("    get actualObject() {")
-		TEXT("        return __get(this.parentObject, this.parentKey);")
+		TEXT("        return __getProperty(this.parentObject, this.parentKey);")
 		TEXT("    }")
 		TEXT("    set actualObject(value) {")
-		TEXT("        __set(this.parentObject, this.parentKey, value);")
+		TEXT("        __setProperty(this.parentObject, this.parentKey, value);")
 		TEXT("    }")
 		TEXT("    get(_, key) {")
 		TEXT("        return this.actualObject[key];")
@@ -1143,7 +1143,7 @@ void FTsuContext::OnCallExtensionMethodImpl(const v8::FunctionCallbackInfo<v8::V
 
 void FTsuContext::OnPropertyGetImpl(const v8::FunctionCallbackInfo<v8::Value>& Info)
 {
-	v8::Local<v8::Context> Context = Isolate->GetCurrentContext();
+	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
 
 	UProperty* Property = nullptr;
 	if (!ensureV8(TsuContext_Private::GetExternalValue(Info.Data(), &Property)))
@@ -1194,9 +1194,6 @@ void FTsuContext::OnPropertyGetImpl(const v8::FunctionCallbackInfo<v8::Value>& I
 	}
 	else if (auto StructProperty = Cast<UStructProperty>(Property))
 	{
-		// #todo(#mihe): Consider fixed-size arrays since we're skipping ReadPropertyFromContainer
-		check(StructProperty->ArrayDim == 1);
-
 		v8::Local<v8::Function> HandlerConstructor = GlobalStructHandlerConstructor.Get(Isolate);
 		v8::Local<v8::Value> HandlerArgs[] = {This, Info.Data()};
 		v8::Local<v8::Object> Handler = HandlerConstructor->NewInstance(
@@ -1433,7 +1430,7 @@ void FTsuContext::OnImportImpl(const v8::FunctionCallbackInfo<v8::Value>& Info)
 	Info.GetReturnValue().Set(ExposeObject(Object));
 }
 
-void FTsuContext::OnGetStructImpl(const v8::FunctionCallbackInfo<v8::Value>& Info)
+void FTsuContext::OnGetPropertyImpl(const v8::FunctionCallbackInfo<v8::Value>& Info)
 {
 	if (!ensureV8(Info.Length() == 2))
 		return;
@@ -1449,7 +1446,7 @@ void FTsuContext::OnGetStructImpl(const v8::FunctionCallbackInfo<v8::Value>& Inf
 	Info.GetReturnValue().Set(ReadPropertyFromContainer(Property, Self));
 }
 
-void FTsuContext::OnSetStructImpl(const v8::FunctionCallbackInfo<v8::Value>& Info)
+void FTsuContext::OnSetPropertyImpl(const v8::FunctionCallbackInfo<v8::Value>& Info)
 {
 	if (!ensureV8(Info.Length() == 3))
 		return;
@@ -1814,10 +1811,11 @@ v8::Local<v8::Value> FTsuContext::UnwrapStructProxy(const v8::Local<v8::Value>& 
 	if (!Value->IsProxy())
 		return Value;
 
+	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
 	v8::Local<v8::Proxy> Proxy = Value.As<v8::Proxy>();
 	v8::Local<v8::Object> Handler = Proxy->GetHandler().As<v8::Object>();
 
-	return Handler->Get(Isolate->GetCurrentContext(), u"actualObject"_v8).ToLocalChecked();
+	return Handler->Get(Context, u"actualObject"_v8).ToLocalChecked();
 }
 
 void FTsuContext::PopArgumentsFromStack(FFrame& Stack, UFunction* Function, TArray<v8::Local<v8::Value>>& OutArguments)
