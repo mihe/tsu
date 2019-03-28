@@ -70,70 +70,78 @@ private:
 	v8::Local<v8::Value> ReferenceDelegate(UProperty* DelegateProperty, UObject* Parent);
 
 	void Invoke(const TCHAR* Namespace, FFrame& Stack, RESULT_DECL);
-
-	bool InvokeDelegateEvent(
-		v8::Local<v8::Value> WorldContext,
-		v8::Local<v8::Function> Callback,
-		UFunction* Signature = nullptr,
-		void* ParamsBuffer = nullptr);
+	bool InvokeDelegateEvent(v8::Local<v8::Value> WorldContext, v8::Local<v8::Function> Callback, UFunction* Signature = nullptr, void* ParamsBuffer = nullptr);
 
 	void AddReferencedObjects(FReferenceCollector& Collector) override;
+
 	void OnPreGarbageCollect();
 	void OnPostGarbageCollect();
 
-	v8::Local<v8::Value> StartTimeout(v8::Local<v8::Function> Callback, float Delay, bool bLoop);
+	v8::Local<v8::Value> StartTimeout(v8::Local<v8::Function> Callback,float Delay,bool bLoop);
 
-	TSU_FUNCTION_CALLBACK(OnConsoleLog);
-	TSU_FUNCTION_CALLBACK(OnConsoleDisplay);
-	TSU_FUNCTION_CALLBACK(OnConsoleError);
-	TSU_FUNCTION_CALLBACK(OnConsoleWarning);
-	TSU_FUNCTION_CALLBACK_IMPL(OnClassNew);
-	TSU_FUNCTION_CALLBACK_IMPL(OnStructNew);
-	TSU_FUNCTION_CALLBACK_IMPL(OnCallMethod);
-	TSU_FUNCTION_CALLBACK_IMPL(OnCallStaticMethod);
-	TSU_FUNCTION_CALLBACK_IMPL(OnCallExtensionMethod);
-	TSU_FUNCTION_CALLBACK_IMPL(OnConsoleTimeBegin);
-	TSU_FUNCTION_CALLBACK_IMPL(OnConsoleTimeEnd);
-	TSU_FUNCTION_CALLBACK_IMPL(OnPropertyGet);
-	TSU_FUNCTION_CALLBACK_IMPL(OnPropertySet);
-	TSU_FUNCTION_CALLBACK_IMPL(OnSetTimeout);
-	TSU_FUNCTION_CALLBACK_IMPL(OnSetInterval);
-	TSU_FUNCTION_CALLBACK_IMPL(OnClearTimeout);
-	TSU_FUNCTION_CALLBACK(OnPathJoin);
-	TSU_FUNCTION_CALLBACK(OnPathResolve);
-	TSU_FUNCTION_CALLBACK(OnPathDirName);
-	TSU_FUNCTION_CALLBACK(OnPathParse);
-	TSU_FUNCTION_CALLBACK(OnFileRead);
-	TSU_FUNCTION_CALLBACK(OnFileExists);
-	TSU_FUNCTION_CALLBACK_IMPL(OnRequire);
-	TSU_FUNCTION_CALLBACK_IMPL(OnImport);
-	TSU_FUNCTION_CALLBACK_IMPL(OnGetProperty);
-	TSU_FUNCTION_CALLBACK_IMPL(OnSetProperty);
-	TSU_FUNCTION_CALLBACK_IMPL(OnGetStaticClass);
-	TSU_FUNCTION_CALLBACK_IMPL(OnDelegateBind);
-	TSU_FUNCTION_CALLBACK_IMPL(OnDelegateUnbind);
-	TSU_FUNCTION_CALLBACK_IMPL(OnDelegateExecute);
-	TSU_FUNCTION_CALLBACK_IMPL(OnDelegateIsBound);
-	TSU_FUNCTION_CALLBACK_IMPL(OnMulticastDelegateAdd);
-	TSU_FUNCTION_CALLBACK_IMPL(OnMulticastDelegateRemove);
-	TSU_FUNCTION_CALLBACK_IMPL(OnMulticastDelegateBroadcast);
-	TSU_FUNCTION_CALLBACK_IMPL(OnMulticastDelegateIsBound);
-	TSU_GET_INDEX_CALLBACK_IMPL(OnArrayGetIndex);
-	TSU_SET_INDEX_CALLBACK_IMPL(OnArraySetIndex);
-	TSU_FUNCTION_CALLBACK_IMPL(OnArrayGetLength);
-	TSU_FUNCTION_CALLBACK_IMPL(OnArraySetLength);
+	TSU_CONTEXT_CALLBACK(OnConsoleLog);
+	TSU_CONTEXT_CALLBACK(OnConsoleDisplay);
+	TSU_CONTEXT_CALLBACK(OnConsoleError);
+	TSU_CONTEXT_CALLBACK(OnConsoleWarning);
+	TSU_CONTEXT_CALLBACK(OnClassNew);
+	TSU_CONTEXT_CALLBACK(OnStructNew);
+	TSU_CONTEXT_CALLBACK(OnCallMethod);
+	TSU_CONTEXT_CALLBACK(OnCallStaticMethod);
+	TSU_CONTEXT_CALLBACK(OnCallExtensionMethod);
+	TSU_CONTEXT_CALLBACK(OnConsoleTimeBegin);
+	TSU_CONTEXT_CALLBACK(OnConsoleTimeEnd);
+	TSU_CONTEXT_CALLBACK(OnPropertyGet);
+	TSU_CONTEXT_CALLBACK(OnPropertySet);
+	TSU_CONTEXT_CALLBACK(OnSetTimeout);
+	TSU_CONTEXT_CALLBACK(OnSetInterval);
+	TSU_CONTEXT_CALLBACK(OnClearTimeout);
+	TSU_CONTEXT_CALLBACK(OnPathJoin);
+	TSU_CONTEXT_CALLBACK(OnPathResolve);
+	TSU_CONTEXT_CALLBACK(OnPathDirName);
+	TSU_CONTEXT_CALLBACK(OnFileRead);
+	TSU_CONTEXT_CALLBACK(OnFileExists);
+	TSU_CONTEXT_CALLBACK(OnRequire);
+	TSU_CONTEXT_CALLBACK(OnImport);
+	TSU_CONTEXT_CALLBACK(OnGetProperty);
+	TSU_CONTEXT_CALLBACK(OnSetProperty);
+	TSU_CONTEXT_CALLBACK(OnGetStaticClass);
+	TSU_CONTEXT_CALLBACK(OnDelegateBind);
+	TSU_CONTEXT_CALLBACK(OnDelegateUnbind);
+	TSU_CONTEXT_CALLBACK(OnDelegateExecute);
+	TSU_CONTEXT_CALLBACK(OnDelegateIsBound);
+	TSU_CONTEXT_CALLBACK(OnMulticastDelegateAdd);
+	TSU_CONTEXT_CALLBACK(OnMulticastDelegateRemove);
+	TSU_CONTEXT_CALLBACK(OnMulticastDelegateBroadcast);
+	TSU_CONTEXT_CALLBACK(OnMulticastDelegateIsBound);
+	TSU_CONTEXT_CALLBACK(OnGetArrayElement);
+	TSU_CONTEXT_CALLBACK(OnSetArrayElement);
+	TSU_CONTEXT_CALLBACK(OnGetArrayLength);
+	TSU_CONTEXT_CALLBACK(OnSetArrayLength);
 
 	void CallMethod(UObject* Object, UFunction* Method, void* ParamsBuffer, v8::ReturnValue<v8::Value> ReturnValue);
-	void GetMethodParams(const v8::FunctionCallbackInfo<v8::Value>& Info, UFunction* Method, void* ParamsBuffer);
-	void GetExtensionMethodParams(const v8::FunctionCallbackInfo<v8::Value>& Info, UFunction* Method, void* ParamsBuffer);
-	v8::Local<v8::Value> UnwrapStructProxy(const v8::Local<v8::Value>& Info);
-
+	void WriteParameters(const v8::FunctionCallbackInfo<v8::Value>& Info, UFunction* Method, void* ParamsBuffer);
+	void WriteExtensionParameters(const v8::FunctionCallbackInfo<v8::Value>& Info, UFunction* Method, void* ParamsBuffer);
 	void PopArgumentsFromStack(FFrame& Stack, UFunction* Function, TArray<v8::Local<v8::Value>>& OutArguments);
 	void PopArgumentFromStack(FFrame& Stack, UProperty* Argument, TArray<v8::Local<v8::Value>>& OutArguments);
 	bool WritePropertyToContainer(UProperty* Property, v8::Local<v8::Value> Value, void* Dest);
 	bool WritePropertyToBuffer(UProperty* Property, v8::Local<v8::Value> Value, void* Dest);
 	v8::Local<v8::Value> ReadPropertyFromContainer(UProperty* Property, const void* Source);
 	v8::Local<v8::Value> ReadPropertyFromBuffer(UProperty* Property, const void* Source);
+
+	template<typename T>
+	bool GetExternalValue(v8::Local<v8::Value> Value, T** OutData);
+
+	template<typename T1, typename T2 = void>
+	bool GetInternalFields(v8::Local<v8::Value> Value, T1** Field1, T2** Field2 = nullptr);
+
+	TArray<v8::Local<v8::Value>> ExtractArgs(const v8::FunctionCallbackInfo<v8::Value>& Info, int32 InBegin = -1, int32 InEnd = -1);
+	bool ValuesToString(const TArray<v8::Local<v8::Value>>& Values, FString& OutResult);
+	bool EnsureV8(bool bCondition, const TCHAR* Expression);
+	void SetProperty(v8::Local<v8::Object> Object, v8::Local<v8::String> Key, v8::Local<v8::Value> Value);
+	void SetMethod(v8::Local<v8::Object> Object, v8::Local<v8::String> Key, v8::FunctionCallback Callback);
+	int32 GetArrayLikeLength(v8::Local<v8::Object> Value);
+	void GetCallSite(FString& OutScriptName, FString& OutFunctionName, int32& OutLineNumber);
+	v8::Local<v8::Value> UnwrapStructProxy(const v8::Local<v8::Value>& Info);
 
 	static TOptional<FTsuContext> Singleton;
 	static v8::Isolate* Isolate;

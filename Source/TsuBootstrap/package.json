@@ -1,16 +1,24 @@
 {
   "private": true,
   "scripts": {
-    "build": "rollup -c"
+    "compile": "tsc --build ./tsconfig.json",
+    "compile-watch": "tsc --build -w ./tsconfig.json",
+    "rollup": "rollup -c",
+    "rollup-watch": "rollup -c -w",
+    "build": "run-s compile rollup",
+    "watch": "run-p compile-watch rollup-watch"
   },
   "devDependencies": {
+    "@types/resolve": "0.0.8",
+    "npm-run-all": "4.1.5",
     "resolve": "1.10.0",
     "rollup": "1.7.3",
     "rollup-plugin-commonjs": "9.2.2",
     "rollup-plugin-inject": "2.2.0",
     "rollup-plugin-json": "4.0.0",
     "rollup-plugin-multi-entry": "2.1.0",
-    "rollup-plugin-node-resolve": "4.0.1"
+    "rollup-plugin-node-resolve": "4.0.1",
+    "typescript": "3.3.4000"
   },
   "dependencies": {}
 }

@@ -12,11 +12,17 @@ const innerRequire = `function require(id) {
 	}
 }`
 
+function onWarning(warning) {
+	if (warning.code !== 'MISSING_NODE_BUILTINS') {
+		throw new Error(warning.message);
+	}
+}
+
 export default [{
-	input: 'source/require.js',
+	input: 'output/require.js',
 
 	output: {
-		file: 'output/require.js',
+		file: 'dist/require.js',
 		format: 'cjs',
 		interop: false,
 		intro: innerRequire
@@ -39,9 +45,37 @@ export default [{
 		inject({ process: 'process' })
 	],
 
-	onwarn(warning) {
-		if (warning.code !== 'MISSING_NODE_BUILTINS') {
-			throw new Error(warning.message);
-		}
-	}
+	onwarn: onWarning,
+}, {
+	input: 'output/arrayProxyHandler.js',
+
+	output: {
+		file: 'dist/arrayProxyHandler.js',
+		format: 'cjs',
+		interop: false
+	},
+
+	plugins: [
+		node(),
+		commonjs(),
+		json()
+	],
+
+	onwarn: onWarning,
+}, {
+	input: 'output/structProxyHandler.js',
+
+	output: {
+		file: 'dist/structProxyHandler.js',
+		format: 'cjs',
+		interop: false
+	},
+
+	plugins: [
+		node(),
+		commonjs(),
+		json()
+	],
+
+	onwarn: onWarning,
 }];

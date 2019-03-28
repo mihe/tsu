@@ -11,7 +11,7 @@ struct TSUUTILITIES_API FTsuPaths
 	static FString ScriptsDir();
 	static FString ScriptsSourceDir();
 	static FString ParserPath();
-	static FString RequirePath();
+	static FString BootstrapPath();
 	static FString TypingsDir();
 	static FString TypingPath(const TCHAR* TypeName);
 };

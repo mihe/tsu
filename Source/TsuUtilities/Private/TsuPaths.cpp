@@ -53,9 +53,9 @@ FString FTsuPaths::ParserPath()
 	return FPaths::Combine(BinariesDir(), TEXT("TsuParser.exe"));
 }
 
-FString FTsuPaths::RequirePath()
+FString FTsuPaths::BootstrapPath()
 {
-	return FPaths::Combine(SourceDir(), TEXT("TsuBootstrap"), TEXT("output"), TEXT("require.js"));
+	return FPaths::Combine(SourceDir(), TEXT("TsuBootstrap"), TEXT("dist"));
 }
 
 FString FTsuPaths::TypingsDir()

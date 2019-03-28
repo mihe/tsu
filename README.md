@@ -244,7 +244,6 @@ _(Already bundled, which means this is optional)._
 ```sh
 cd Source/TsuParser
 npm install
-npm run build
 npm run package
 ```
 
