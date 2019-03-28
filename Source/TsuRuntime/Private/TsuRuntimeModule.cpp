@@ -110,7 +110,7 @@ private:
 		}
 
 		RegisterSettings();
-		FTsuContext::Create();
+		FTsuContext::Get();
 		AddCleanupDelegates();
 	}
 

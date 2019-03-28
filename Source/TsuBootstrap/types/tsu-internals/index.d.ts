@@ -14,17 +14,6 @@ declare function __getProperty(
 	parentKey: object
 ): void;
 
-declare function __getArrayLength(
-	parentObject: object,
-	parentKey: object
-): number;
-
-declare function __setArrayLength(
-	parentObject: object,
-	parentKey: object,
-	value: unknown
-): void;
-
 declare function __getArrayElement(
 	parentObject: object,
 	parentKey: object,
@@ -37,6 +26,17 @@ declare function __setArrayElement(
 	key: PropertyKey,
 	value: Element
 ): true | undefined;
+
+declare function __getArrayLength(
+	parentObject: object,
+	parentKey: object
+): number;
+
+declare function __setArrayLength(
+	parentObject: object,
+	parentKey: object,
+	value: unknown
+): void;
 
 declare function __import(id: string): unknown;
 

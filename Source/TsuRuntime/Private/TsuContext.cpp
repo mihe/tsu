@@ -44,127 +44,6 @@ v8::Global<v8::Function> FTsuContext::GlobalStructHandlerConstructor;
 
 #define ensureV8(InExpression) FTsuContext::EnsureV8(ensure(InExpression), TEXT(#InExpression))
 
-bool FTsuContext::ValuesToString(
-	const TArray<v8::Local<v8::Value>>& Values,
-	FString& OutResult)
-{
-	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
-
-	int32 NumWritten = 0;
-	for (const v8::Local<v8::Value>& Value : Values)
-	{
-		if (NumWritten++ > 0)
-			OutResult += TEXT(' ');
-
-		v8::Local<v8::String> String;
-		if (Value->ToString(Context).ToLocal(&String))
-			OutResult.Append(V8_TO_TCHAR(String));
-	}
-
-	return true;
-}
-
-void FTsuContext::SetProperty(
-	v8::Local<v8::Object> Object,
-	v8::Local<v8::String> Key,
-	v8::Local<v8::Value> Value)
-{
-	verify(Object->Set(GlobalContext.Get(Isolate), Key, Value).ToChecked());
-}
-
-void FTsuContext::SetMethod(
-	v8::Local<v8::Object> Object,
-	v8::Local<v8::String> Key,
-	v8::FunctionCallback Callback)
-{
-	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
-	v8::Local<v8::Function> Value = v8::Function::New(Context, Callback).ToLocalChecked();
-	verify(Object->Set(Context, Key, Value).ToChecked());
-}
-
-TArray<v8::Local<v8::Value>> FTsuContext::ExtractArgs(const v8::FunctionCallbackInfo<v8::Value>& Info, int32 InBegin, int32 InEnd)
-{
-	TArray<v8::Local<v8::Value>> Args;
-	Args.Reserve(Info.Length());
-
-	const int32 Begin = InBegin != -1 ? InBegin : 0;
-	const int32 End = InEnd != -1 ? InEnd : Info.Length();
-
-	for (int32 Index = Begin; Index < End; ++Index)
-		Args.Add(Info[Index]);
-
-	return Args;
-}
-
-template<typename T>
-bool FTsuContext::GetExternalValue(v8::Local<v8::Value> Value, T** OutData)
-{
-	if (!ensure(Value->IsExternal()))
-		return false;
-
-	void* Data = Value.As<v8::External>()->Value();
-	*OutData = static_cast<T*>(Data);
-	return true;
-}
-
-template<typename T1, typename T2>
-bool FTsuContext::GetInternalFields(v8::Local<v8::Value> Value, T1** Field1, T2** Field2)
-{
-	if (!ensure(Value->IsObject()))
-		return false;
-
-	v8::Local<v8::Object> Object = Value.As<v8::Object>();
-	if (!ensure(Object->InternalFieldCount() == 2))
-		return false;
-
-	if (Field1)
-		*Field1 = static_cast<T1*>(Object->GetAlignedPointerFromInternalField(0));
-
-	if (Field2)
-		*Field2 = static_cast<T2*>(Object->GetAlignedPointerFromInternalField(1));
-
-	return true;
-}
-
-bool FTsuContext::EnsureV8(bool bCondition, const TCHAR* Expression)
-{
-	if (LIKELY(bCondition))
-		return true;
-
-	v8::Local<v8::String> Message = TCHAR_TO_V8(Expression);
-	v8::Local<v8::Value> Exception = v8::Exception::Error(Message);
-	Isolate->ThrowException(Exception);
-
-	return false;
-}
-
-void FTsuContext::GetCallSite(FString& OutScriptName, FString& OutFunctionName, int32& OutLineNumber)
-{
-	const auto Options = v8::StackTrace::StackTraceOptions(
-		v8::StackTrace::kScriptName |
-		v8::StackTrace::kFunctionName |
-		v8::StackTrace::kLineNumber);
-
-	v8::Local<v8::StackTrace> StackTrace = v8::StackTrace::CurrentStackTrace(Isolate, 1, Options);
-	v8::Local<v8::StackFrame> StackFrame = StackTrace->GetFrame(Isolate, 0);
-
-	const FString ScriptName = V8_TO_TCHAR(StackFrame->GetScriptName());
-	OutScriptName = FPaths::GetBaseFilename(ScriptName);
-	OutLineNumber = StackFrame->GetLineNumber();
-	OutFunctionName = V8_TO_TCHAR(StackFrame->GetFunctionName());
-}
-
-int32 FTsuContext::GetArrayLikeLength(v8::Local<v8::Object> Value)
-{
-	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
-
-	v8::Local<v8::String> Key = u"length"_v8;
-	if (!Value->Has(Context, Key).ToChecked())
-		return 0;
-
-	return Value->Get(Context, Key).ToLocalChecked().As<v8::Int32>()->Value();
-}
-
 FTsuContext::FTsuContext()
 {
 	Isolate = FTsuIsolate::Get();
@@ -216,9 +95,12 @@ FTsuContext::~FTsuContext()
 	}
 }
 
-void FTsuContext::Create()
+FTsuContext& FTsuContext::Get()
 {
-	Get();
+	if (!Singleton.IsSet())
+		Singleton.Emplace();
+
+	return Singleton.GetValue();
 }
 
 void FTsuContext::Destroy()
@@ -230,14 +112,6 @@ void FTsuContext::Destroy()
 bool FTsuContext::Exists()
 {
 	return Singleton.IsSet();
-}
-
-FTsuContext& FTsuContext::Get()
-{
-	if (!Singleton.IsSet())
-		Singleton.Emplace();
-
-	return Singleton.GetValue();
 }
 
 v8::MaybeLocal<v8::Value> FTsuContext::EvalModule(const TCHAR* Code, const TCHAR* Path)
@@ -308,7 +182,9 @@ void FTsuContext::UnloadModule(const TCHAR* Binding)
 	LoadedModules.Remove(Binding);
 }
 
-v8::MaybeLocal<v8::Function> FTsuContext::GetExportedFunction(const TCHAR* Binding, const TCHAR* FunctionName)
+v8::MaybeLocal<v8::Function> FTsuContext::GetExportedFunction(
+	const TCHAR* Binding,
+	const TCHAR* FunctionName)
 {
 	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
 	v8::Local<v8::Object> Global = Context->Global();
@@ -368,54 +244,54 @@ void FTsuContext::InitializeBuiltins()
 	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
 	v8::Local<v8::Object> Global = Context->Global();
 
-	SetProperty(Global, u"global"_v8, Global);
-	SetProperty(Global, u"module"_v8, Global);
-	SetProperty(Global, u"exports"_v8, v8::Object::New(Isolate));
+	DefineProperty(Global, u"global"_v8, Global);
+	DefineProperty(Global, u"module"_v8, Global);
+	DefineProperty(Global, u"exports"_v8, v8::Object::New(Isolate));
 
-	SetMethod(Global, u"setTimeout"_v8, &FTsuContext::_OnSetTimeout);
-	SetMethod(Global, u"setInterval"_v8, &FTsuContext::_OnSetInterval);
-	SetMethod(Global, u"clearTimeout"_v8, &FTsuContext::_OnClearTimeout);
-	SetMethod(Global, u"clearInterval"_v8, &FTsuContext::_OnClearTimeout);
-	SetMethod(Global, u"__require"_v8, &FTsuContext::_OnRequire);
-	SetMethod(Global, u"__import"_v8, &FTsuContext::_OnImport);
-	SetMethod(Global, u"__getProperty"_v8, &FTsuContext::_OnGetProperty);
-	SetMethod(Global, u"__setProperty"_v8, &FTsuContext::_OnSetProperty);
-	SetMethod(Global, u"__getArrayLength"_v8, &FTsuContext::_OnGetArrayLength);
-	SetMethod(Global, u"__setArrayLength"_v8, &FTsuContext::_OnSetArrayLength);
-	SetMethod(Global, u"__getArrayElement"_v8, &FTsuContext::_OnGetArrayElement);
-	SetMethod(Global, u"__setArrayElement"_v8, &FTsuContext::_OnSetArrayElement);
+	DefineMethod(Global, u"setTimeout"_v8, &FTsuContext::_OnSetTimeout);
+	DefineMethod(Global, u"setInterval"_v8, &FTsuContext::_OnSetInterval);
+	DefineMethod(Global, u"clearTimeout"_v8, &FTsuContext::_OnClearTimeout);
+	DefineMethod(Global, u"clearInterval"_v8, &FTsuContext::_OnClearTimeout);
+	DefineMethod(Global, u"__require"_v8, &FTsuContext::_OnRequire);
+	DefineMethod(Global, u"__import"_v8, &FTsuContext::_OnImport);
+	DefineMethod(Global, u"__getProperty"_v8, &FTsuContext::_OnGetProperty);
+	DefineMethod(Global, u"__setProperty"_v8, &FTsuContext::_OnSetProperty);
+	DefineMethod(Global, u"__getArrayLength"_v8, &FTsuContext::_OnGetArrayLength);
+	DefineMethod(Global, u"__setArrayLength"_v8, &FTsuContext::_OnSetArrayLength);
+	DefineMethod(Global, u"__getArrayElement"_v8, &FTsuContext::_OnGetArrayElement);
+	DefineMethod(Global, u"__setArrayElement"_v8, &FTsuContext::_OnSetArrayElement);
 
 	v8::Local<v8::Object> Console = v8::Object::New(Isolate);
-	SetMethod(Console, u"log"_v8, &FTsuContext::_OnConsoleLog);
-	SetMethod(Console, u"display"_v8, &FTsuContext::_OnConsoleDisplay);
-	SetMethod(Console, u"error"_v8, &FTsuContext::_OnConsoleError);
-	SetMethod(Console, u"warn"_v8, &FTsuContext::_OnConsoleWarning);
-	SetMethod(Console, u"time"_v8, &FTsuContext::_OnConsoleTimeBegin);
-	SetMethod(Console, u"timeEnd"_v8, &FTsuContext::_OnConsoleTimeEnd);
-	SetProperty(Global, u"console"_v8, Console);
+	DefineMethod(Console, u"log"_v8, &FTsuContext::_OnConsoleLog);
+	DefineMethod(Console, u"display"_v8, &FTsuContext::_OnConsoleDisplay);
+	DefineMethod(Console, u"error"_v8, &FTsuContext::_OnConsoleError);
+	DefineMethod(Console, u"warn"_v8, &FTsuContext::_OnConsoleWarning);
+	DefineMethod(Console, u"time"_v8, &FTsuContext::_OnConsoleTimeBegin);
+	DefineMethod(Console, u"timeEnd"_v8, &FTsuContext::_OnConsoleTimeEnd);
+	DefineProperty(Global, u"console"_v8, Console);
 
 	v8::Local<v8::Object> Path = v8::Object::New(Isolate);
-	SetMethod(Path, u"join"_v8, &FTsuContext::_OnPathJoin);
-	SetMethod(Path, u"resolve"_v8, &FTsuContext::_OnPathResolve);
-	SetMethod(Path, u"dirname"_v8, &FTsuContext::_OnPathDirName);
-	SetProperty(Global, u"__path"_v8, Path);
+	DefineMethod(Path, u"join"_v8, &FTsuContext::_OnPathJoin);
+	DefineMethod(Path, u"resolve"_v8, &FTsuContext::_OnPathResolve);
+	DefineMethod(Path, u"dirname"_v8, &FTsuContext::_OnPathDirName);
+	DefineProperty(Global, u"__path"_v8, Path);
 
 	v8::Local<v8::Object> File = v8::Object::New(Isolate);
-	SetMethod(File, u"read"_v8, &FTsuContext::_OnFileRead);
-	SetMethod(File, u"exists"_v8, &FTsuContext::_OnFileExists);
-	SetProperty(Global, u"__file"_v8, File);
+	DefineMethod(File, u"read"_v8, &FTsuContext::_OnFileRead);
+	DefineMethod(File, u"exists"_v8, &FTsuContext::_OnFileExists);
+	DefineProperty(Global, u"__file"_v8, File);
 
 #if PLATFORM_WINDOWS
-	SetProperty(Global, u"__platform"_v8, u"win32"_v8);
+	DefineProperty(Global, u"__platform"_v8, u"win32"_v8);
 #elif PLATFORM_MAC
-	SetProperty(Global, u"__platform"_v8, u"darwin"_v8);
+	DefineProperty(Global, u"__platform"_v8, u"darwin"_v8);
 #elif PLATFORM_LINUX
-	SetProperty(Global, u"__platform"_v8, u"linux"_v8);
+	DefineProperty(Global, u"__platform"_v8, u"linux"_v8);
 #else
 #error Not implemented
 #endif
 
-	SetProperty(Global, u"__ue"_v8, v8::Object::New(Isolate));
+	DefineProperty(Global, u"__ue"_v8, v8::Object::New(Isolate));
 }
 
 void FTsuContext::InitializeDelegates()
@@ -549,7 +425,12 @@ v8::Local<v8::FunctionTemplate> FTsuContext::AddTemplate(UStruct* Type)
 	{
 		v8::Local<v8::String> Name = TCHAR_TO_V8(FTsuTypings::TailorNameOfField(Property));
 		v8::Local<v8::External> Data = v8::External::New(Isolate, Property);
-		v8::Local<v8::FunctionTemplate> Getter = v8::FunctionTemplate::New(Isolate, &FTsuContext::_OnPropertyGet, Data);
+
+		v8::Local<v8::FunctionTemplate> Getter = v8::FunctionTemplate::New(
+			Isolate,
+			&FTsuContext::_OnPropertyGet,
+			Data);
+
 		v8::Local<v8::FunctionTemplate> Setter = bIsReadOnly
 			? v8::Local<v8::FunctionTemplate>()
 			: v8::FunctionTemplate::New(Isolate, &FTsuContext::_OnPropertySet, Data);
@@ -1185,6 +1066,115 @@ void FTsuContext::OnPropertySet(const v8::FunctionCallbackInfo<v8::Value>& Info)
 		return;
 }
 
+void FTsuContext::OnGetArrayElement(const v8::FunctionCallbackInfo<v8::Value>& Info)
+{
+	if (!ensureV8(Info.Length() == 3))
+		return;
+
+	void* ParentBuffer = nullptr;
+	if (!ensureV8(GetInternalFields(Info[0], &ParentBuffer)))
+		return;
+
+	UArrayProperty* ArrayProperty = nullptr;
+	if (!ensureV8(GetExternalValue(Info[1], &ArrayProperty)))
+		return;
+
+	Info.GetReturnValue().SetUndefined();
+
+	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
+	v8::MaybeLocal<v8::Uint32> MaybeIndexValue = Info[2]->ToArrayIndex(Context);
+	v8::Local<v8::Uint32> IndexValue;
+	if (!MaybeIndexValue.ToLocal(&IndexValue))
+		return;
+
+	void* ArrayBuffer = ArrayProperty->ContainerPtrToValuePtr<void>(ParentBuffer);
+	FScriptArrayHelper ArrayHelper{ArrayProperty, ArrayBuffer};
+
+	const uint32_t Index = IndexValue->Value();
+	if (Index >= (uint32_t)ArrayHelper.Num())
+		return;
+
+	UProperty* ElementProperty = ArrayProperty->Inner;
+	const void* ElementBuffer = ArrayHelper.GetRawPtr(Index);
+
+	Info.GetReturnValue().Set(ReadPropertyFromBuffer(ElementProperty, ElementBuffer));
+}
+
+void FTsuContext::OnSetArrayElement(const v8::FunctionCallbackInfo<v8::Value>& Info)
+{
+	if (!ensureV8(Info.Length() == 4))
+		return;
+
+	void* ParentBuffer = nullptr;
+	if (!ensureV8(GetInternalFields(Info[0], &ParentBuffer)))
+		return;
+
+	UArrayProperty* ArrayProperty = nullptr;
+	if (!ensureV8(GetExternalValue(Info[1], &ArrayProperty)))
+		return;
+
+	Info.GetReturnValue().Set(false);
+
+	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
+	v8::MaybeLocal<v8::Uint32> MaybeIndexValue = Info[2]->ToArrayIndex(Context);
+	v8::Local<v8::Uint32> IndexValue;
+	if (!MaybeIndexValue.ToLocal(&IndexValue))
+		return;
+
+	void* ArrayBuffer = ArrayProperty->ContainerPtrToValuePtr<void>(ParentBuffer);
+	FScriptArrayHelper ArrayHelper{ArrayProperty, ArrayBuffer};
+
+	const uint32_t Index = IndexValue->Value();
+	if (Index >= (uint32_t)ArrayHelper.Num())
+		ArrayHelper.Resize(Index + 1);
+
+	UProperty* ElementProperty = ArrayProperty->Inner;
+	void* ElementBuffer = ArrayHelper.GetRawPtr(Index);
+
+	WritePropertyToBuffer(ElementProperty, UnwrapStructProxy(Info[3]), ElementBuffer);
+
+	Info.GetReturnValue().Set(true);
+}
+
+void FTsuContext::OnGetArrayLength(const v8::FunctionCallbackInfo<v8::Value>& Info)
+{
+	if (!ensureV8(Info.Length() == 2))
+		return;
+
+	void* ParentBuffer = nullptr;
+	if (!ensureV8(GetInternalFields(Info[0], &ParentBuffer)))
+		return;
+
+	UArrayProperty* ArrayProperty = nullptr;
+	if (!ensureV8(GetExternalValue(Info[1], &ArrayProperty)))
+		return;
+
+	void* ArrayBuffer = ArrayProperty->ContainerPtrToValuePtr<void>(ParentBuffer);
+	FScriptArrayHelper ArrayHelper{ArrayProperty, ArrayBuffer};
+
+	Info.GetReturnValue().Set((uint32_t)ArrayHelper.Num());
+}
+
+void FTsuContext::OnSetArrayLength(const v8::FunctionCallbackInfo<v8::Value>& Info)
+{
+	if (!ensureV8(Info.Length() == 3))
+		return;
+
+	void* ParentBuffer = nullptr;
+	if (!ensureV8(GetInternalFields(Info[0], &ParentBuffer)))
+		return;
+
+	UArrayProperty* ArrayProperty = nullptr;
+	if (!ensureV8(GetExternalValue(Info[1], &ArrayProperty)))
+		return;
+
+	void* ArrayBuffer = ArrayProperty->ContainerPtrToValuePtr<void>(ParentBuffer);
+	FScriptArrayHelper ArrayHelper{ArrayProperty, ArrayBuffer};
+
+	const int32 NewSize = Info[2].As<v8::Uint32>()->Value();
+	ArrayHelper.Resize(NewSize);
+}
+
 void FTsuContext::OnSetTimeout(const v8::FunctionCallbackInfo<v8::Value>& Info)
 {
 	if (!ensureV8(Info.Length() == 2))
@@ -1595,118 +1585,11 @@ void FTsuContext::OnMulticastDelegateIsBound(const v8::FunctionCallbackInfo<v8::
 	Info.GetReturnValue().Set(MulticastDelegate->IsBound());
 }
 
-void FTsuContext::OnGetArrayElement(const v8::FunctionCallbackInfo<v8::Value>& Info)
-{
-	if (!ensureV8(Info.Length() == 3))
-		return;
-
-	void* ParentBuffer = nullptr;
-	if (!ensureV8(GetInternalFields(Info[0], &ParentBuffer)))
-		return;
-
-	UArrayProperty* ArrayProperty = nullptr;
-	if (!ensureV8(GetExternalValue(Info[1], &ArrayProperty)))
-		return;
-
-	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
-	v8::MaybeLocal<v8::Uint32> MaybeIndexValue = Info[2]->ToArrayIndex(Context);
-	v8::Local<v8::Uint32> IndexValue;
-	if (!MaybeIndexValue.ToLocal(&IndexValue))
-	{
-		Info.GetReturnValue().SetUndefined();
-		return;
-	}
-
-	void* ArrayBuffer = ArrayProperty->ContainerPtrToValuePtr<void>(ParentBuffer);
-	FScriptArrayHelper ArrayHelper{ArrayProperty, ArrayBuffer};
-
-	const uint32_t Index = IndexValue->Value();
-	if (Index >= (uint32_t)ArrayHelper.Num())
-	{
-		Info.GetReturnValue().SetUndefined();
-		return;
-	}
-
-	UProperty* ElementProperty = ArrayProperty->Inner;
-	const void* ElementBuffer = ArrayHelper.GetRawPtr(Index);
-
-	Info.GetReturnValue().Set(ReadPropertyFromBuffer(ElementProperty, ElementBuffer));
-}
-
-void FTsuContext::OnSetArrayElement(const v8::FunctionCallbackInfo<v8::Value>& Info)
-{
-	if (!ensureV8(Info.Length() == 4))
-		return;
-
-	void* ParentBuffer = nullptr;
-	if (!ensureV8(GetInternalFields(Info[0], &ParentBuffer)))
-		return;
-
-	UArrayProperty* ArrayProperty = nullptr;
-	if (!ensureV8(GetExternalValue(Info[1], &ArrayProperty)))
-		return;
-
-	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
-	v8::MaybeLocal<v8::Uint32> MaybeIndexValue = Info[2]->ToArrayIndex(Context);
-	v8::Local<v8::Uint32> IndexValue;
-	if (!MaybeIndexValue.ToLocal(&IndexValue))
-		return;
-
-	void* ArrayBuffer = ArrayProperty->ContainerPtrToValuePtr<void>(ParentBuffer);
-	FScriptArrayHelper ArrayHelper{ArrayProperty, ArrayBuffer};
-
-	const uint32_t Index = IndexValue->Value();
-	if (Index >= (uint32_t)ArrayHelper.Num())
-		ArrayHelper.Resize(Index + 1);
-
-	UProperty* ElementProperty = ArrayProperty->Inner;
-	void* ElementBuffer = ArrayHelper.GetRawPtr(Index);
-
-	WritePropertyToBuffer(ElementProperty, UnwrapStructProxy(Info[3]), ElementBuffer);
-
-	Info.GetReturnValue().Set(true);
-}
-
-void FTsuContext::OnGetArrayLength(const v8::FunctionCallbackInfo<v8::Value>& Info)
-{
-	if (!ensureV8(Info.Length() == 2))
-		return;
-
-	void* ParentBuffer = nullptr;
-	if (!ensureV8(GetInternalFields(Info[0], &ParentBuffer)))
-		return;
-
-	UArrayProperty* ArrayProperty = nullptr;
-	if (!ensureV8(GetExternalValue(Info[1], &ArrayProperty)))
-		return;
-
-	void* ArrayBuffer = ArrayProperty->ContainerPtrToValuePtr<void>(ParentBuffer);
-	FScriptArrayHelper ArrayHelper{ArrayProperty, ArrayBuffer};
-
-	Info.GetReturnValue().Set((uint32_t)ArrayHelper.Num());
-}
-
-void FTsuContext::OnSetArrayLength(const v8::FunctionCallbackInfo<v8::Value>& Info)
-{
-	if (!ensureV8(Info.Length() == 3))
-		return;
-
-	void* ParentBuffer = nullptr;
-	if (!ensureV8(GetInternalFields(Info[0], &ParentBuffer)))
-		return;
-
-	UArrayProperty* ArrayProperty = nullptr;
-	if (!ensureV8(GetExternalValue(Info[1], &ArrayProperty)))
-		return;
-
-	void* ArrayBuffer = ArrayProperty->ContainerPtrToValuePtr<void>(ParentBuffer);
-	FScriptArrayHelper ArrayHelper{ArrayProperty, ArrayBuffer};
-
-	const int32 NewSize = Info[2].As<v8::Uint32>()->Value();
-	ArrayHelper.Resize(NewSize);
-}
-
-void FTsuContext::CallMethod(UObject* Object, UFunction* Method, void* ParamsBuffer, v8::ReturnValue<v8::Value> ReturnValue)
+void FTsuContext::CallMethod(
+	UObject* Object,
+	UFunction* Method,
+	void* ParamsBuffer,
+	v8::ReturnValue<v8::Value> ReturnValue)
 {
 	Object->ProcessEvent(Method, ParamsBuffer);
 
@@ -1812,18 +1695,6 @@ void FTsuContext::WriteExtensionParameters(
 
 		WritePropertyToContainer(Parameter, ArgValue, ParamsBuffer);
 	}, Method, false, false);
-}
-
-v8::Local<v8::Value> FTsuContext::UnwrapStructProxy(const v8::Local<v8::Value>& Value)
-{
-	if (!Value->IsProxy())
-		return Value;
-
-	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
-	v8::Local<v8::Proxy> Proxy = Value.As<v8::Proxy>();
-	v8::Local<v8::Object> Handler = Proxy->GetHandler().As<v8::Object>();
-
-	return Handler->Get(Context, u"actualObject"_v8).ToLocalChecked();
 }
 
 void FTsuContext::PopArgumentsFromStack(
@@ -2013,7 +1884,7 @@ bool FTsuContext::WritePropertyToBuffer(
 		FScriptSetHelper SetHelper{SetProperty, Buffer};
 
 		v8::Local<v8::Set> SetValue = Value.As<v8::Set>();
-		v8::Local<v8::Array> SetArray = SetValue->AsArray();
+		v8::Local<v8::Array> SetAsArray = SetValue->AsArray();
 
 		const int32 SetSize = (int32)SetValue->Size();
 		SetHelper.EmptyElements(SetSize);
@@ -2025,7 +1896,7 @@ bool FTsuContext::WritePropertyToBuffer(
 
 		for (int32 ElementIndex = 0; ElementIndex < SetSize; ++ElementIndex)
 		{
-			v8::Local<v8::Value> ElementValue = SetArray->Get(Context, ElementIndex).ToLocalChecked();
+			v8::Local<v8::Value> ElementValue = SetAsArray->Get(Context, ElementIndex).ToLocalChecked();
 			WritePropertyToBuffer(ElementProperty, ElementValue, ElementBuffer);
 			SetHelper.AddElement(ElementBuffer);
 		}
@@ -2230,4 +2101,141 @@ v8::Local<v8::Value> FTsuContext::ReadPropertyFromBuffer(UProperty* Property, co
 	UE_LOG(LogTsuRuntime, Error, TEXT("Unhandled type: %s"), *Property->GetCPPType());
 	checkNoEntry();
 	return {};
+}
+
+template<typename T>
+bool FTsuContext::GetExternalValue(v8::Local<v8::Value> Value, T** OutData)
+{
+	if (!ensure(Value->IsExternal()))
+		return false;
+
+	void* Data = Value.As<v8::External>()->Value();
+	*OutData = static_cast<T*>(Data);
+	return true;
+}
+
+template<typename T1, typename T2>
+bool FTsuContext::GetInternalFields(v8::Local<v8::Value> Value, T1** Field1, T2** Field2)
+{
+	if (!ensure(Value->IsObject()))
+		return false;
+
+	v8::Local<v8::Object> Object = Value.As<v8::Object>();
+	if (!ensure(Object->InternalFieldCount() == 2))
+		return false;
+
+	if (Field1)
+		*Field1 = static_cast<T1*>(Object->GetAlignedPointerFromInternalField(0));
+
+	if (Field2)
+		*Field2 = static_cast<T2*>(Object->GetAlignedPointerFromInternalField(1));
+
+	return true;
+}
+
+TArray<v8::Local<v8::Value>> FTsuContext::ExtractArgs(
+	const v8::FunctionCallbackInfo<v8::Value>& Info,
+	int32 InBegin,
+	int32 InEnd)
+{
+	TArray<v8::Local<v8::Value>> Args;
+	Args.Reserve(Info.Length());
+
+	const int32 Begin = InBegin != -1 ? InBegin : 0;
+	const int32 End = InEnd != -1 ? InEnd : Info.Length();
+
+	for (int32 Index = Begin; Index < End; ++Index)
+		Args.Add(Info[Index]);
+
+	return Args;
+}
+
+bool FTsuContext::ValuesToString(const TArray<v8::Local<v8::Value>>& Values, FString& OutResult)
+{
+	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
+
+	int32 NumWritten = 0;
+	for (const v8::Local<v8::Value>& Value : Values)
+	{
+		if (NumWritten++ > 0)
+			OutResult += TEXT(' ');
+
+		v8::Local<v8::String> String;
+		if (Value->ToString(Context).ToLocal(&String))
+			OutResult.Append(V8_TO_TCHAR(String));
+	}
+
+	return true;
+}
+
+bool FTsuContext::EnsureV8(bool bCondition, const TCHAR* Expression)
+{
+	if (LIKELY(bCondition))
+		return true;
+
+	v8::Local<v8::String> Message = TCHAR_TO_V8(Expression);
+	v8::Local<v8::Value> Exception = v8::Exception::Error(Message);
+	Isolate->ThrowException(Exception);
+
+	return false;
+}
+
+void FTsuContext::DefineProperty(
+	v8::Local<v8::Object> Object,
+	v8::Local<v8::String> Key,
+	v8::Local<v8::Value> Value)
+{
+	verify(Object->Set(GlobalContext.Get(Isolate), Key, Value).ToChecked());
+}
+
+void FTsuContext::DefineMethod(
+	v8::Local<v8::Object> Object,
+	v8::Local<v8::String> Key,
+	v8::FunctionCallback Callback)
+{
+	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
+	v8::Local<v8::Function> Value = v8::Function::New(Context, Callback).ToLocalChecked();
+	verify(Object->Set(Context, Key, Value).ToChecked());
+}
+
+int32 FTsuContext::GetArrayLikeLength(v8::Local<v8::Object> Value)
+{
+	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
+
+	v8::Local<v8::String> Key = u"length"_v8;
+	if (!Value->Has(Context, Key).ToChecked())
+		return 0;
+
+	return Value->Get(Context, Key).ToLocalChecked().As<v8::Int32>()->Value();
+}
+
+void FTsuContext::GetCallSite(
+	FString& OutScriptName,
+	FString& OutFunctionName,
+	int32& OutLineNumber)
+{
+	const auto Options = v8::StackTrace::StackTraceOptions(
+		v8::StackTrace::kScriptName |
+		v8::StackTrace::kFunctionName |
+		v8::StackTrace::kLineNumber);
+
+	v8::Local<v8::StackTrace> StackTrace = v8::StackTrace::CurrentStackTrace(Isolate, 1, Options);
+	v8::Local<v8::StackFrame> StackFrame = StackTrace->GetFrame(Isolate, 0);
+
+	const FString ScriptName = V8_TO_TCHAR(StackFrame->GetScriptName());
+	OutScriptName = FPaths::GetBaseFilename(ScriptName);
+	OutLineNumber = StackFrame->GetLineNumber();
+	OutFunctionName = V8_TO_TCHAR(StackFrame->GetFunctionName());
+}
+
+v8::Local<v8::Value> FTsuContext::UnwrapStructProxy(const v8::Local<v8::Value>& Value)
+{
+	if (!Value->IsProxy())
+		return Value;
+
+	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
+	v8::Local<v8::Proxy> Proxy = Value.As<v8::Proxy>();
+	v8::Local<v8::Object> Handler = Proxy->GetHandler().As<v8::Object>();
+
+	return Handler->Get(Context, u"actualObject"_v8).ToLocalChecked();
 }
