@@ -95,9 +95,30 @@ If you still want to try it, head over to [Releases][rls].
 
 _(For a reference to these steps you can look at the [examples project][tex])_
 
-### Basics
+### Installation
 
-You'll need a `Content/Scripts/tsconfig.json` that at the very least has these compiler options:
+1. Extract the `TSU` directory into the `Plugins` directory of your project. Create one if it doesn't exist already.
+1. Open your project in the editor
+1. Go to `Plugins` under the `Edit` menu
+1. Click on the `Scripting` category under `Project` (at the bottom)
+1. Check the `Enabled` checkbox for `TypeScript for Unreal`
+1. Restart the editor as prompted
+1. Configure the content monitoring [(as described below)](#content-monitoring)
+1. Add the TypeScript config [(as described below)](#typescript-config)
+1. _(Optional)_ Setup hot-reloading [(as described below)](#hot-reloading-1)
+1. _(Optional)_ Setup debugging [(as described below)](#debugging-with-visual-studio-code)
+
+### Content monitoring
+
+First off, exclude the upcoming TypeScript config from the content monitoring, which you can do in `Editor Preferences` under `Loading & Saving`. Then expand the advanced settings of `Auto Reimport` and add `Scripts/tsconfig.json` as shown below:
+
+![tsconfig exclusion][ext]
+
+If you later decide to add more files to your project, like `package.json` or `tslint.json` you'll want to exclude those as well.
+
+### TypeScript config
+
+The TypeScript config should be located at `Content/Scripts/tsconfig.json`, and look something like this:
 
 ```json
 {
@@ -122,25 +143,25 @@ You'll need a `Content/Scripts/tsconfig.json` that at the very least has these c
 }
 ```
 
-You can also add more [compiler options][opt] to it, like `noUnusedLocals` and `noUnusedParameters`.
+You can also add more [compiler options][opt] to it, like `"noUnusedLocals": true`.
 
 Now you can start adding your `.ts` files to `Content/Scripts/Source`.
 
 ### Hot-reloading
 
-Hot-reloading relies on the auto reimport feature in UE4, which you'll find in `Editor Preferences` under `Loading & Saving`.
+Hot-reloading relies on the auto reimport feature in UE4, which you'll again find in `Editor Preferences` under `Loading & Saving`.
 
 Make sure `Monitor Content Directories` is enabled, then expand the advanced settings and make sure your settings look something like this:
 
-![Advanced settings][imp]
+![Hot reload settings][htr]
+
+`Prompt Before Action` is the important part here. Disabling it will mean your changes will automatically be imported and compiled when a change to your TypeScript file is detected.
 
 `Import Threshold Time` will decide how fast your changes get hot-reloaded. Setting it to something as low as `0.0 s` might have adverse effects for regular content assets, but if you're only ever reimporting TypeScript files you should be fine.
 
-If you decide to add more files to your project, like `package.json` or `tslint.json` you'll want to add those as exclusions as well.
-
 ### Debugging (with Visual Studio Code)
 
-First off, add `Scripts/.vscode/*` to your reimport exclusions (as seen above).
+First off, add `Scripts/.vscode/*` to be excluded from the content monitoring [(as described above)](#content-monitoring).
 
 TSU listens for V8 debuggers on port 19216. So you'll want a `Content/Scripts/.vscode/launch.json` that looks like this:
 
@@ -165,11 +186,13 @@ TSU listens for V8 debuggers on port 19216. So you'll want a `Content/Scripts/.v
 
 The most important part here, outside of the port number, is `sourceMaps` and `sourceMapPathOverrides`. Without these you won't be able to set breakpoints in your TypeScript files.
 
+Now you should be able to attach the debugger as soon as the editor is up and running.
+
 ### Node.js packages
 
 If you want to add a package like [Lodash][lds] to your project, you need to take the following steps:
 
-First off, add the following reimport exclusions (as seen above):
+First off, add the following files to be excluded from the content monitoring [(as described above)](#content-monitoring):
 
 - `Scripts/node_modules/*`
 - `Scripts/package.json`
@@ -197,6 +220,16 @@ Lastly you'll want to add support for `@types` in your `tsconfig.json` by adding
     "../../Intermediate/Typings",
     "./node_modules/@types"
 ],
+```
+
+Now you should be able to use it just like you would in Node.js:
+
+```ts
+// Either through imports...
+import * as _ from 'lodash';
+
+// ... or through regular `require`
+const _ = require('lodash');
 ```
 
 ## Quirks
@@ -266,7 +299,8 @@ TypeScript for Unreal is licensed under the 3-clause BSD license. See the [LICEN
 [exb]: https://user-images.githubusercontent.com/4884246/54877994-5e571580-4e26-11e9-87ee-a4947f916ceb.png
 [exd]: https://user-images.githubusercontent.com/4884246/54877939-a6c20380-4e25-11e9-8abe-78e037b0b23b.gif
 [exh]: https://user-images.githubusercontent.com/4884246/54877941-b3465c00-4e25-11e9-8ea2-eec26373a444.gif
-[imp]: https://user-images.githubusercontent.com/4884246/54918144-c9275000-4efd-11e9-99ab-5355c4eba16a.png
+[ext]: https://user-images.githubusercontent.com/4884246/55279926-f66d6700-531e-11e9-8ec9-89b94bbf1343.png
+[htr]: https://user-images.githubusercontent.com/4884246/55280061-b7401580-5320-11e9-92b6-b23fbb565e2b.png
 [lds]: https://www.npmjs.com/package/lodash
 [lic]: LICENSE.md
 [mkt]: https://www.unrealengine.com/marketplace/
