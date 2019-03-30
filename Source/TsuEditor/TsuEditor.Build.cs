@@ -16,7 +16,6 @@ public class TsuEditor : ModuleRules
 				"Slate",
 				"UnrealEd",
 				"Settings",
-				"AssetTools",
 				"KismetCompiler",
 				"Kismet",
 				"BlueprintGraph",
