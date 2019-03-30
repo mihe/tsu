@@ -20,7 +20,7 @@ public:
 
 	void ProcessEvent(UFunction* Function, void* Parameters) override;
 
-	v8::Global<v8::Value> WorldContext;
+	v8::Global<v8::Object> WorldContext;
 	v8::Global<v8::Function> Callback;
 	UFunction* Signature = nullptr;
 };

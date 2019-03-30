@@ -9,7 +9,7 @@
 #include "TsuTryCatch.h"
 #include "TsuTypings.h"
 #include "TsuUtilities.h"
-#include "TsuWorldScope.h"
+#include "TsuWorldContextScope.h"
 
 #include "Engine/Engine.h"
 #include "HAL/PlatformFile.h"
@@ -176,25 +176,30 @@ void FTsuContext::UnloadModule(const TCHAR* Binding)
 	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
 	v8::Local<v8::Object> Global = Context->Global();
 
-	v8::Local<v8::Primitive> Module = v8::Undefined(Isolate);
-	Global->Set(Context, TCHAR_TO_V8(Binding), Module);
+	Global->Set(Context, TCHAR_TO_V8(Binding), v8::Undefined(Isolate));
 
 	LoadedModules.Remove(Binding);
 }
 
 v8::MaybeLocal<v8::Function> FTsuContext::GetExportedFunction(
-	const TCHAR* Binding,
+	const TCHAR* ModuleBinding,
 	const TCHAR* FunctionName)
 {
 	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
 	v8::Local<v8::Object> Global = Context->Global();
 
-	v8::Local<v8::Object> Exports = Global->Get(Context, TCHAR_TO_V8(Binding)).ToLocalChecked().As<v8::Object>();
+	v8::Local<v8::Object> Exports = Global->Get(Context, TCHAR_TO_V8(ModuleBinding)).ToLocalChecked().As<v8::Object>();
 	v8::Local<v8::Value> Export = Exports->Get(Context, TCHAR_TO_V8(FunctionName)).ToLocalChecked();
 	if (!ensure(Export->IsFunction()))
 		return {};
 
 	return Export.As<v8::Function>();
+}
+
+void FTsuContext::PushWorldContext(v8::Local<v8::Object> WorldContext)
+{
+	check(!WorldContext->IsUndefined() && !WorldContext->IsNull());
+	WorldContexts.Emplace(Isolate, WorldContext);
 }
 
 bool FTsuContext::PushWorldContext(UObject* WorldContext)
@@ -203,18 +208,11 @@ bool FTsuContext::PushWorldContext(UObject* WorldContext)
 
 	if (UWorld* World = WorldContext->GetWorld())
 	{
-		PushWorldContext(ReferenceClassObject(World));
+		PushWorldContext(ReferenceClassObject(World).As<v8::Object>());
 		return true;
 	}
 
 	return false;
-}
-
-bool FTsuContext::PushWorldContext(v8::Local<v8::Value> WorldContext)
-{
-	check(!WorldContext->IsUndefined() && !WorldContext->IsNull());
-	WorldContexts.Emplace(Isolate, WorldContext);
-	return true;
 }
 
 void FTsuContext::PopWorldContext()
@@ -222,7 +220,7 @@ void FTsuContext::PopWorldContext()
 	WorldContexts.Pop();
 }
 
-v8::Local<v8::Value> FTsuContext::GetWorldContext()
+v8::Local<v8::Object> FTsuContext::GetWorldContext()
 {
 	if (WorldContexts.Num() > 0)
 		return WorldContexts[0].Get(Isolate);
@@ -236,7 +234,7 @@ v8::Local<v8::Value> FTsuContext::GetWorldContext()
 
 	check(World != nullptr);
 
-	return ReferenceClassObject(World);
+	return ReferenceClassObject(World).As<v8::Object>();
 }
 
 void FTsuContext::InitializeBuiltins()
@@ -372,7 +370,7 @@ void FTsuContext::InitializeStructProxy()
 	GlobalStructHandlerConstructor.Reset(Isolate, HandlerConstructor);
 }
 
-v8::Local<v8::Function> FTsuContext::ExposeObject(UStruct* Type)
+v8::Local<v8::Function> FTsuContext::FindOrAddConstructor(UStruct* Type)
 {
 	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
 	v8::Local<v8::FunctionTemplate> Template = FindOrAddTemplate(Type);
@@ -497,13 +495,11 @@ v8::Local<v8::FunctionTemplate> FTsuContext::AddTemplate(UStruct* Type)
 
 v8::Local<v8::FunctionTemplate> FTsuContext::FindOrAddTemplate(UStruct* Type)
 {
-	if (v8::Global<v8::FunctionTemplate>* FoundTemplate = Templates.Find(Type))
-		return FoundTemplate->Get(Isolate);
-
-	return AddTemplate(Type);
+	v8::Global<v8::FunctionTemplate>* FoundTemplate = Templates.Find(Type);
+	return FoundTemplate ? FoundTemplate->Get(Isolate) : AddTemplate(Type);
 }
 
-v8::Local<v8::Value> FTsuContext::ReferenceStructObject(void* StructObject, UScriptStruct* StructType)
+v8::Local<v8::Object> FTsuContext::ReferenceStructObject(void* StructObject, UScriptStruct* StructType)
 {
 	v8::Local<v8::FunctionTemplate> ConstructorTemplate = FindOrAddTemplate(StructType);
 	v8::Local<v8::ObjectTemplate> InstanceTemplate = ConstructorTemplate->InstanceTemplate();
@@ -570,7 +566,7 @@ v8::Local<v8::Value> FTsuContext::ReferenceClassObject(UObject* ClassObject)
 	return Value;
 }
 
-v8::Local<v8::Value> FTsuContext::ReferenceDelegate(UProperty* DelegateProperty, UObject* Parent)
+v8::Local<v8::Object> FTsuContext::ReferenceDelegate(UProperty* DelegateProperty, UObject* Parent)
 {
 	v8::Local<v8::Object> Value;
 
@@ -611,7 +607,7 @@ void FTsuContext::Invoke(const TCHAR* Binding, FFrame& Stack, RESULT_DECL)
 	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
 	v8::Local<v8::Object> Global = Context->Global();
 
-	FTsuWorldScope WorldScope{*this, Stack.Object};
+	FTsuWorldContextScope WorldScope{*this, Stack.Object};
 
 	UFunction* Function = Stack.CurrentNativeFunction;
 	const FString FunctionName = FTsuTypings::TailorNameOfField(Function);
@@ -639,7 +635,7 @@ void FTsuContext::Invoke(const TCHAR* Binding, FFrame& Stack, RESULT_DECL)
 }
 
 bool FTsuContext::InvokeDelegateEvent(
-	v8::Local<v8::Value> WorldContext,
+	v8::Local<v8::Object> WorldContext,
 	v8::Local<v8::Function> Callback,
 	UFunction* Signature,
 	void* ParamsBuffer)
@@ -647,7 +643,7 @@ bool FTsuContext::InvokeDelegateEvent(
 	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
 	v8::Local<v8::Object> Global = Context->Global();
 
-	FTsuWorldScope WorldScope{*this, WorldContext};
+	FTsuWorldContextScope WorldScope{*this, WorldContext};
 
 	TArray<v8::Local<v8::Value>> Arguments;
 
@@ -1367,7 +1363,7 @@ void FTsuContext::OnImport(const v8::FunctionCallbackInfo<v8::Value>& Info)
 	auto Object = Cast<UStruct>(Type);
 	ensureV8(Object != nullptr);
 
-	Info.GetReturnValue().Set(ExposeObject(Object));
+	Info.GetReturnValue().Set(FindOrAddConstructor(Object));
 }
 
 void FTsuContext::OnGetProperty(const v8::FunctionCallbackInfo<v8::Value>& Info)
@@ -1410,8 +1406,7 @@ void FTsuContext::OnGetStaticClass(const v8::FunctionCallbackInfo<v8::Value>& In
 	if (!ensureV8(GetExternalValue(Info.Data(), &Class)))
 		return;
 
-	v8::Local<v8::Value> Result = ReferenceClassObject(Class);
-	Info.GetReturnValue().Set(Result);
+	Info.GetReturnValue().Set(ReferenceClassObject(Class));
 }
 
 void FTsuContext::OnDelegateBind(const v8::FunctionCallbackInfo<v8::Value>& Info)

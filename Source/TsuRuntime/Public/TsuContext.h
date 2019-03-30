@@ -17,7 +17,7 @@ class TSURUNTIME_API FTsuContext final
 {
 	friend struct TOptional<FTsuContext>;
 	friend class FTsuModule;
-	friend struct FTsuWorldScope;
+	friend struct FTsuWorldContextScope;
 	friend class UTsuDelegateEvent;
 
 	using FStructKey = TTuple<void*, UScriptStruct*>;
@@ -78,77 +78,138 @@ public:
 private:
 	FTsuContext();
 
-	/** ... */
+	/**
+	 * Unloads a module by simply unbinding it from the global object, meaning it'll get disposed of
+	 * once the GC does its thing.
+	 * 
+	 * @param Binding The name which the module was bound to
+	 */
 	void UnloadModule(const TCHAR* Binding);
 
-	/** ... */
-	v8::MaybeLocal<v8::Function> GetExportedFunction(const TCHAR* Binding, const TCHAR* Name);
+	/**
+	 * Gets the V8 value of a specified function from a specified module.
+	 * 
+	 * @param Binding The name which the parent module was bound to
+	 * @param Name The name of the function
+	 * @returns The V8 value (maybe)
+	 */
+	v8::MaybeLocal<v8::Function> GetExportedFunction(const TCHAR* ModuleBinding, const TCHAR* Name);
 
-	/** ... */
+	/**
+	 * Pushes an object onto the top of the world context stack.
+	 * 
+	 * @see FTsuWorldContextScope
+	 * @param WorldContext The object to push onto to the stack
+	 */
+	void PushWorldContext(v8::Local<v8::Object> WorldContext);
+
+	/**
+	 * Pushes an object onto the top of the world context stack. This overload will implicitly create a
+	 * V8 reference to the object.
+	 * 
+	 * @see FTsuWorldContextScope
+	 * @param WorldContext The object to push onto the stack
+	 * @returns Whether it was successfully pushed or not
+	 */
 	bool PushWorldContext(UObject* WorldContext);
 
-	/** ... */
-	bool PushWorldContext(v8::Local<v8::Value> WorldContext);
-
-	/** ... */
+	/**
+	 * Pops the top-most object from the world context stack.
+	 *
+	 * @see FTsuWorldContextScope
+	 */
 	void PopWorldContext();
 
-	/** ... */
-	v8::Local<v8::Value> GetWorldContext();
+	/** Gets the top-most object from the world context stack */
+	v8::Local<v8::Object> GetWorldContext();
 
+	/** Binds all the core stuff to the global object, like `console.log`, etc. */
 	void InitializeBuiltins();
 
-	/** ... */
+	/** Creates and stores the templates for regular and multicast delegates */
 	void InitializeDelegates();
 
-	/** ... */
+	/** Loads and binds the code for `require` */
 	void InitializeRequire();
 
-	/** ... */
+	/** Loads, creates and stores the constructor for the array proxy handler */
 	void InitializeArrayProxy();
 
-	/** ... */
+	/** Loads, creates and stores the constructor for the struct proxy handler */
 	void InitializeStructProxy();
 
-	/** ... */
-	v8::Local<v8::Function> ExposeObject(UStruct* Type);
+	/** Finds the constructor for a given type. Creates and caches it if it isn't already. */
+	v8::Local<v8::Function> FindOrAddConstructor(UStruct* Type);
 
-	/** ... */
+	/** Creates, caches and returns a template for a given type */
 	v8::Local<v8::FunctionTemplate> AddTemplate(UStruct* Type);
 
-	/** ... */
+	/** Finds the template for a given type. Creates and caches it if it isn't already. */
 	v8::Local<v8::FunctionTemplate> FindOrAddTemplate(UStruct* Type);
 
-	/** ... */
-	v8::Local<v8::Value> ReferenceStructObject(void* StructObject, UScriptStruct* StructType);
+	/**
+	 * Creates a V8 instance of a given struct instance and adds it to the list of alive structs.
+	 * 
+	 * @param StructObject The given struct object
+	 * @param StructType The type of the given struct object
+	 * @returns The resulting V8 object
+	 */
+	v8::Local<v8::Object> ReferenceStructObject(void* StructObject, UScriptStruct* StructType);
 
-	/** ... */
+	/**
+	 * Creates a V8 instance of a given UObject and adds it to the list of alive objects.
+	 * 
+	 * @note Will return a null value if a `nullptr` is passed to it.
+	 * @param ClassObject The given class object
+	 * @returns The resulting V8 object, or null
+	 */
 	v8::Local<v8::Value> ReferenceClassObject(UObject* ClassObject);
 
-	/** ... */
-	v8::Local<v8::Value> ReferenceDelegate(UProperty* DelegateProperty, UObject* Parent);
+	/**
+	 * Creates a V8 instance of a regular or multicast delegate and adds it to the list of alive delegates.
+	 * 
+	 * @param ParentProperty The delegate property of the parent UObject
+	 * @param Parent Pointer to the parent UObject
+	 * @returns The resulting V8 object
+	 */
+	v8::Local<v8::Object> ReferenceDelegate(UProperty* ParentProperty, UObject* Parent);
 
-	/** ... */
+	/** The native function callback for exported TSU functions */
 	void Invoke(const TCHAR* Namespace, FFrame& Stack, RESULT_DECL);
 
-	/** ... */
+	/**
+	 * Callback for UTsuDelegateEvent when a delegate event is called/broadcast.
+	 * 
+	 * @param WorldContext The world context at the time of event creation
+	 * @param Callback The callback bound to the event
+	 * @param Signature Optional signature of the delegate, if the delegate expects parameters
+	 * @param ParamsBuffer Optional parameter buffer, if the delegate expects parameters
+	 * @returns Whether the call was successful or not
+	 */
 	bool InvokeDelegateEvent(
-		v8::Local<v8::Value> WorldContext,
+		v8::Local<v8::Object> WorldContext,
 		v8::Local<v8::Function> Callback,
 		UFunction* Signature = nullptr,
 		void* ParamsBuffer = nullptr);
 
-	/** ... */
+	 /** Override of FGCObject::AddReferencedObjects */
 	void AddReferencedObjects(FReferenceCollector& Collector) override;
 
-	/** ... */
+	/** Callback for pre UObject GC */
 	void OnPreGarbageCollect();
 
-	/** ... */
+	/** Callback for post UObject GC */
 	void OnPostGarbageCollect();
 
-	/** ... */
-	v8::Local<v8::Value> StartTimeout(v8::Local<v8::Function> Callback,float Delay,bool bLoop);
+	/**
+	 * Creates and stores a callback to be invoked after a specified delay, using `FTimerManager`.
+	 * 
+	 * @param Callback The callback to execute
+	 * @param Delay The time to wait before executing the callback
+	 * @param bLoop Whether to queue another timeout after this one is done
+	 * @returns The V8 instance of the resulting `FTimerHandle`
+	 */
+	v8::Local<v8::Value> StartTimeout(v8::Local<v8::Function> Callback, float Delay, bool bLoop);
 
 	/** ... */
 	TSU_CONTEXT_CALLBACK(OnConsoleLog);
@@ -385,7 +446,7 @@ private:
 	TMap<FString, TSharedPtr<FTsuModule>> LoadedModules;
 
 	/** ... */
-	TArray<v8::Global<v8::Value>> WorldContexts;
+	TArray<v8::Global<v8::Object>> WorldContexts;
 
 	/** ... */
 	uint64 NextDelegateHandle = 1;
