@@ -60,9 +60,9 @@ UClass* FAssetTypeActions_TsuBlueprint::GetSupportedClass() const
 	return UTsuBlueprint::StaticClass();
 }
 
-bool FAssetTypeActions_TsuBlueprint::HasActions(const TArray<UObject*>& InObjects) const
+bool FAssetTypeActions_TsuBlueprint::HasActions(const TArray<UObject*>& Objects) const
 {
-	for (UObject* Object : InObjects)
+	for (UObject* Object : Objects)
 	{
 		if (Object->IsA<UTsuBlueprint>())
 			return true;
@@ -72,19 +72,17 @@ bool FAssetTypeActions_TsuBlueprint::HasActions(const TArray<UObject*>& InObject
 }
 
 void FAssetTypeActions_TsuBlueprint::GetActions(
-	const TArray<UObject*>& InObjects,
+	const TArray<UObject*>& Objects,
 	FMenuBuilder& MenuBuilder)
 {
-	GetBlueprintActions().GetActions(InObjects, MenuBuilder);
+	GetBlueprintActions().GetActions(Objects, MenuBuilder);
 
-	TArray<TWeakObjectPtr<UTsuBlueprint>> Blueprints = TsuAssetTypeActions_Private::GetTypedWeakObjectPtrs<UTsuBlueprint>(InObjects);
-
-	const FUICommandInfo& OpenInTextEditorAction = FTsuEditorCommands::Get().GetActionOpenInTextEditor();
+	TArray<TWeakObjectPtr<UTsuBlueprint>> Blueprints = TsuAssetTypeActions_Private::GetTypedWeakObjectPtrs<UTsuBlueprint>(Objects);
 
 	MenuBuilder.AddMenuEntry(
-		OpenInTextEditorAction.GetLabel(),
-		OpenInTextEditorAction.GetDescription(),
-		OpenInTextEditorAction.GetIcon(),
+		FText::FromString("Open In Text Editor"),
+		FText::FromString("Opens the associated TypeScript file in the configured text editor"),
+		FSlateIcon(FTsuEditorStyle::Get().GetStyleSetName(), TEXT("TsuEditor.OpenInTextEditor")),
 		FUIAction(
 			FExecuteAction::CreateStatic(
 				&TsuAssetTypeActions_Private::ExecuteOpenInTextEditor,
@@ -119,17 +117,17 @@ void FAssetTypeActions_TsuBlueprint::GetResolvedSourceFilePaths(
 }
 
 void FAssetTypeActions_TsuBlueprint::OpenAssetEditor(
-	const TArray<UObject*>& InObjects,
+	const TArray<UObject*>& Objects,
 	TSharedPtr<IToolkitHost> EditWithinLevelEditor)
 {
-	return GetBlueprintActions().OpenAssetEditor(InObjects, EditWithinLevelEditor);
+	return GetBlueprintActions().OpenAssetEditor(Objects, EditWithinLevelEditor);
 }
 
 void FAssetTypeActions_TsuBlueprint::AssetsActivated(
-	const TArray<UObject*>& InObjects,
+	const TArray<UObject*>& Objects,
 	EAssetTypeActivationMethod::Type ActivationType)
 {
-	return GetBlueprintActions().AssetsActivated(InObjects, ActivationType);
+	return GetBlueprintActions().AssetsActivated(Objects, ActivationType);
 }
 
 bool FAssetTypeActions_TsuBlueprint::CanLocalize() const
@@ -142,9 +140,9 @@ bool FAssetTypeActions_TsuBlueprint::CanMerge() const
 	return GetBlueprintActions().CanMerge();
 }
 
-void FAssetTypeActions_TsuBlueprint::Merge(UObject* InObject)
+void FAssetTypeActions_TsuBlueprint::Merge(UObject* Object)
 {
-	GetBlueprintActions().Merge(InObject);
+	GetBlueprintActions().Merge(Object);
 }
 
 void FAssetTypeActions_TsuBlueprint::Merge(

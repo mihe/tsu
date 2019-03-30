@@ -23,8 +23,7 @@ void FTsuEditorStyle::Initialize()
 	const FVector2D Icon40x40(40.0f, 40.0f);
 	const FVector2D Icon64x64(64.0f, 64.0f);
 
-	StyleSet->Set("TsuEditor.OpenInTextEditor", new TSU_IMAGE_BRUSH("Icons/TsuBlueprint_40x", Icon40x40));
-	StyleSet->Set("TsuEditor.OpenInTextEditor.Small", new TSU_IMAGE_BRUSH("Icons/TsuBlueprint_20x", Icon20x20));
+	StyleSet->Set("TsuEditor.OpenInTextEditor", new TSU_IMAGE_BRUSH("Icons/TsuBlueprint_20x", Icon20x20));
 	StyleSet->Set("ClassIcon.TsuBlueprint", new TSU_IMAGE_BRUSH("Icons/TsuBlueprint_16x", Icon16x16));
 	StyleSet->Set("ClassIcon.TsuBlueprint.Large", new TSU_IMAGE_BRUSH("Icons/TsuBlueprint_40x", Icon40x40));
 	StyleSet->Set("ClassThumbnail.TsuBlueprint", new TSU_IMAGE_BRUSH("Icons/TsuBlueprint_64x", Icon64x64));
