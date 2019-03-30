@@ -224,6 +224,9 @@ private:
 	TSU_CONTEXT_CALLBACK(OnConsoleWarning);
 
 	/** ... */
+	TSU_CONTEXT_CALLBACK(OnConsoleTrace);
+
+	/** ... */
 	TSU_CONTEXT_CALLBACK(OnClassNew);
 
 	/** ... */

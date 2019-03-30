@@ -185,10 +185,11 @@ void FTsuTypings::WriteGlobalTypings()
 	TSU_WRITELN("\tfunction clearInterval(handle: TimerHandle): void;");
 	TSU_WRITELN("");
 	TSU_WRITELN("\tvar console: {");
-	TSU_WRITELN("\t\terror(message: any, ...optionalParams: any[]): void;");
-	TSU_WRITELN("\t\tinfo(message: any, ...optionalParams: any[]): void;");
 	TSU_WRITELN("\t\tlog(message: any, ...optionalParams: any[]): void;");
+	TSU_WRITELN("\t\tinfo(message: any, ...optionalParams: any[]): void;");
 	TSU_WRITELN("\t\twarn(message: any, ...optionalParams: any[]): void;");
+	TSU_WRITELN("\t\terror(message: any, ...optionalParams: any[]): void;");
+	TSU_WRITELN("\t\ttrace(message: any, ...optionalParams: any[]): void;");
 	TSU_WRITELN("\t\tdisplay(duration: number, message: any, ...optionalParams: any[]): void;");
 	TSU_WRITELN("\t\ttime(label: string): void;");
 	TSU_WRITELN("\t\ttimeEnd(label: string): void;");

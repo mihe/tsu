@@ -261,9 +261,10 @@ void FTsuContext::InitializeBuiltins()
 
 	v8::Local<v8::Object> Console = v8::Object::New(Isolate);
 	DefineMethod(Console, u"log"_v8, &FTsuContext::_OnConsoleLog);
-	DefineMethod(Console, u"display"_v8, &FTsuContext::_OnConsoleDisplay);
-	DefineMethod(Console, u"error"_v8, &FTsuContext::_OnConsoleError);
 	DefineMethod(Console, u"warn"_v8, &FTsuContext::_OnConsoleWarning);
+	DefineMethod(Console, u"error"_v8, &FTsuContext::_OnConsoleError);
+	DefineMethod(Console, u"trace"_v8, &FTsuContext::_OnConsoleTrace);
+	DefineMethod(Console, u"display"_v8, &FTsuContext::_OnConsoleDisplay);
 	DefineMethod(Console, u"time"_v8, &FTsuContext::_OnConsoleTimeBegin);
 	DefineMethod(Console, u"timeEnd"_v8, &FTsuContext::_OnConsoleTimeEnd);
 	DefineProperty(Global, u"console"_v8, Console);
@@ -756,6 +757,60 @@ void FTsuContext::OnConsoleLog(const v8::FunctionCallbackInfo<v8::Value>& Info)
 	FString Message;
 	if (ensureV8(ValuesToString(ExtractArgs(Info), Message)))
 	{
+		UE_LOG(LogTsu, Log, TEXT("%s"), *Message);
+	}
+}
+
+void FTsuContext::OnConsoleWarning(const v8::FunctionCallbackInfo<v8::Value>& Info)
+{
+	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
+
+	FString ScriptName;
+	FString FunctionName;
+	int32 LineNumber = 0;
+	GetCallSite(ScriptName, FunctionName, LineNumber);
+
+	FString Message;
+	if (ensureV8(ValuesToString(ExtractArgs(Info), Message)))
+	{
+		UE_LOG(LogTsu, Warning, TEXT("%s"), *Message);
+	}
+}
+
+void FTsuContext::OnConsoleError(const v8::FunctionCallbackInfo<v8::Value>& Info)
+{
+	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
+
+	FString ScriptName;
+	FString FunctionName;
+	int32 LineNumber = 0;
+	GetCallSite(ScriptName, FunctionName, LineNumber);
+
+	FString Message;
+	if (ensureV8(ValuesToString(ExtractArgs(Info), Message)))
+	{
+		FMsg::Logf_Internal(
+			nullptr,
+			0,
+			LogTsu.GetCategoryName(),
+			ELogVerbosity::Error,
+			TEXT("%s"),
+			*Message);
+	}
+}
+
+void FTsuContext::OnConsoleTrace(const v8::FunctionCallbackInfo<v8::Value>& Info)
+{
+	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
+
+	FString ScriptName;
+	FString FunctionName;
+	int32 LineNumber = 0;
+	GetCallSite(ScriptName, FunctionName, LineNumber);
+
+	FString Message;
+	if (ensureV8(ValuesToString(ExtractArgs(Info), Message)))
+	{
 		UE_LOG(LogTsu, Log, TEXT("%s (at %s:%s:%d)"), *Message, *ScriptName, *FunctionName, LineNumber);
 	}
 }
@@ -778,38 +833,6 @@ void FTsuContext::OnConsoleDisplay(const v8::FunctionCallbackInfo<v8::Value>& In
 		FString Message;
 		if (ensureV8(ValuesToString(ExtractArgs(Info, 1), Message)))
 			GEngine->AddOnScreenDebugMessage((uint64)-1, (float)Duration, FColor::Cyan, Message);
-	}
-}
-
-void FTsuContext::OnConsoleError(const v8::FunctionCallbackInfo<v8::Value>& Info)
-{
-	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
-
-	FString ScriptName;
-	FString FunctionName;
-	int32 LineNumber = 0;
-	GetCallSite(ScriptName, FunctionName, LineNumber);
-
-	FString Message;
-	if (ensureV8(ValuesToString(ExtractArgs(Info), Message)))
-	{
-		UE_LOG(LogTsu, Error, TEXT("%s (at %s:%s:%d)"), *Message, *ScriptName, *FunctionName, LineNumber);
-	}
-}
-
-void FTsuContext::OnConsoleWarning(const v8::FunctionCallbackInfo<v8::Value>& Info)
-{
-	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
-
-	FString ScriptName;
-	FString FunctionName;
-	int32 LineNumber = 0;
-	GetCallSite(ScriptName, FunctionName, LineNumber);
-
-	FString Message;
-	if (ensureV8(ValuesToString(ExtractArgs(Info), Message)))
-	{
-		UE_LOG(LogTsu, Warning, TEXT("%s (at %s:%s:%d)"), *Message, *ScriptName, *FunctionName, LineNumber);
 	}
 }
 
