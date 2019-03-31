@@ -318,7 +318,7 @@ TypeScript for Unreal is licensed under the 3-clause BSD license. See the [LICEN
 [opt]: https://www.typescriptlang.org/docs/handbook/compiler-options.html
 [rls]: https://github.com/mihe/tsu/releases
 [sio]: https://github.com/getnamo/socketio-client-ue4
-[tex]: https://github.com/mihe/tsu-examples/tree/master
+[tex]: https://github.com/mihe/tsu-examples
 [tsc]: https://www.typescriptlang.org/
 [ue4]: https://docs.unrealengine.com/en-US/GettingStarted/Installation
 [ujs]: https://github.com/ncsoft/Unreal.js
