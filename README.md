@@ -98,13 +98,14 @@ _(For a reference to these steps you can look at the [examples project][tex])_
 ### Installation
 
 1. Extract the `TSU` directory into the `Plugins` directory of your project. Create one if it doesn't exist already.
-1. Open your project in the editor
+1. Open your project in the Unreal editor (or restart if already open)
 1. Go to `Plugins` under the `Edit` menu
 1. Click on the `Scripting` category under `Project` (at the bottom)
 1. Check the `Enabled` checkbox for `TypeScript for Unreal`
 1. Restart the editor as prompted
 1. Configure the content monitoring [(as described below)](#content-monitoring)
 1. Add the TypeScript config [(as described below)](#typescript-config)
+1. _(Optional)_ Choose text editor [(as described below)](#editor-integration)
 1. _(Optional)_ Setup hot-reloading [(as described below)](#hot-reloading-1)
 1. _(Optional)_ Setup debugging [(as described below)](#debugging-with-visual-studio-code)
 
@@ -147,6 +148,14 @@ You can also add more [compiler options][opt] to it, like `"noUnusedLocals": tru
 
 Now you can start adding your `.ts` files to `Content/Scripts/Source`.
 
+### Text editor
+
+TSU supports the "Goto Definition" feature of Blueprint, which you'll find if you right-click on a function call node (or double-click it). By default this is set to open files in Notepad. If you'd like to change this you can go to the `TypeScript for Unreal` settings in `Editor Preferences`. There you'll find presets that you can switch between.
+
+If you don't find a preset that suits you then untick the `Use Editor Preset` checkbox and replace the `Editor Path` and `Editor Arguments` to suit your editor. The `Editor Arguments` field will have `%f` replaced with the filename, `%d` with the workspace directory and `%l` and `%c` with the line and column number respectively.
+
+![Text editor settings][edt]
+
 ### Hot-reloading
 
 Hot-reloading relies on the auto reimport feature in UE4, which you'll again find in `Editor Preferences` under `Loading & Saving`.
@@ -155,7 +164,7 @@ Make sure `Monitor Content Directories` is enabled, then expand the advanced set
 
 ![Hot reload settings][htr]
 
-`Prompt Before Action` is the important part here. Disabling it will mean your changes will automatically be imported and compiled when a change to your TypeScript file is detected.
+`Prompt Before Action` is the important part here. Disabling it will mean your changes will automatically be imported and compiled when a change to your TypeScript file is detected. Note that this will affect regular content assets as well, such as textures and meshes.
 
 `Import Threshold Time` will decide how fast your changes get hot-reloaded. Setting it to something as low as `0.0 s` might have adverse effects for regular content assets, but if you're only ever reimporting TypeScript files you should be fine.
 
@@ -192,13 +201,13 @@ Now you should be able to attach the debugger as soon as the editor is up and ru
 
 If you want to add a package like [Lodash][lds] to your project, you need to take the following steps:
 
-First off, add the following files to be excluded from the content monitoring [(as described above)](#content-monitoring):
+First off, make sure you have [Node.js][njs] installed.
+
+Then add the following files to be excluded from the content monitoring [(as described above)](#content-monitoring):
 
 - `Scripts/node_modules/*`
 - `Scripts/package.json`
 - `Scripts/package-lock.json`
-
-Also make sure you have [Node.js][njs] installed.
 
 Then you'll want to add a `package.json` (if you don't have one already). In `Content/Scripts` run:
 
@@ -296,6 +305,7 @@ TypeScript for Unreal is licensed under the 3-clause BSD license. See the [LICEN
 
 [bnr]: https://user-images.githubusercontent.com/4884246/54883366-87e36180-4e65-11e9-8bc9-5fdb6b5cd462.png
 [dsc]: https://discord.gg/QPrNpAQ
+[edt]: https://user-images.githubusercontent.com/4884246/55287744-3549fe00-53ad-11e9-97f4-a26a0960864f.png
 [exb]: https://user-images.githubusercontent.com/4884246/54877994-5e571580-4e26-11e9-87ee-a4947f916ceb.png
 [exd]: https://user-images.githubusercontent.com/4884246/54877939-a6c20380-4e25-11e9-8abe-78e037b0b23b.gif
 [exh]: https://user-images.githubusercontent.com/4884246/54877941-b3465c00-4e25-11e9-8ea2-eec26373a444.gif
