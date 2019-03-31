@@ -152,9 +152,9 @@ Now you can start adding your `.ts` files to `Content/Scripts/Source`.
 
 TSU supports the "Goto Definition" feature of Blueprint, which you'll find if you right-click on a function call node (or double-click it). By default this is set to open files in Notepad. If you'd like to change this you can go to the `TypeScript for Unreal` settings in `Editor Preferences`. There you'll find presets that you can switch between.
 
-If you don't find a preset that suits you then untick the `Use Editor Preset` checkbox and replace the `Editor Path` and `Editor Arguments` to suit your editor. The `Editor Arguments` field will have `%f` replaced with the filename, `%d` with the workspace directory and `%l` and `%c` with the line and column number respectively.
-
 ![Text editor settings][edt]
+
+If you don't find a preset that suits you then untick the `Use Editor Preset` checkbox and replace the `Editor Path` and `Editor Arguments` to suit your editor. The `Editor Arguments` field will have `%f` replaced with the filename, `%d` with the workspace directory and `%l` and `%c` with the line and column number respectively.
 
 ### Hot-reloading
 
