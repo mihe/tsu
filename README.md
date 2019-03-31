@@ -105,7 +105,7 @@ _(For a reference to these steps you can look at the [examples project][tex])_
 1. Restart the editor as prompted
 1. Configure the content monitoring [(as described below)](#content-monitoring)
 1. Add the TypeScript config [(as described below)](#typescript-config)
-1. _(Optional)_ Choose text editor [(as described below)](#editor-integration)
+1. _(Optional)_ Choose text editor [(as described below)](#text-editor)
 1. _(Optional)_ Setup hot-reloading [(as described below)](#hot-reloading-1)
 1. _(Optional)_ Setup debugging [(as described below)](#debugging-with-visual-studio-code)
 
