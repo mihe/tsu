@@ -11,7 +11,7 @@ Need help with something? Join us on [Discord][dsc].
 - [Features](#features)
 - [Downloads](#downloads)
 - [Setup](#setup)
-- [Quirks](#quirks)
+- [How it works](#how-it-works)
 - [Motivation](#motivation)
 - [Building](#building)
 - [License](#license)
@@ -61,7 +61,7 @@ This also applies to any third-party Blueprint API, meaning you could install so
 
 ### CommonJS
 
-With support for the CommonJS module format you can make use of existing TypeScript/JavaScript packages (assuming they don't rely on any web or Node.js API's). One such package would be the popular utility library [Lodash][lds].
+With support for the CommonJS module format you can make use of existing TypeScript/JavaScript packages (assuming they don't rely on any web or Node.js APIs). One such package would be the popular utility library [Lodash][lds].
 
 ```ts
 import * as _ from 'lodash';
@@ -241,9 +241,15 @@ import * as _ from 'lodash';
 const _ = require('lodash');
 ```
 
-## Quirks
+## How it works
 
-There are some inherent quirks with mapping a scripting language to Blueprint that might be good to know before diving too deep into TSU, check out [the wiki][wki] for more details.
+As you start up the Unreal editor TSU will trawl through all of the public-facing Blueprint APIs and generate typings into the `Intermediate/Typings` directory of your project. After following [the setup guide](#setup) you are then able to use these generated types to write TypeScript code where you export functions that you want to make available from Blueprint.
+
+When your TypeScript file gets imported into Unreal, TSU will compile that TypeScript code into JavaScript using the official TypeScript compiler. At the same time it looks at what functions you are exporting and creates a Blueprint function library containing native Blueprint functions that match the ones you exported, doing its best to translate between the two.
+
+The transpiled JavaScript code is then loaded into the V8 runtime automatically as needed, and whenever you invoke one of the these new Blueprint functions TSU will transparently convert values between Blueprint and V8, to give you a familiar experience on either end.
+
+However, there are some inherent quirks with mapping a scripting language to Blueprint that might be good to know before diving too deep into TSU, please [see the wiki][wki] for more details.
 
 ## Motivation
 
