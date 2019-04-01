@@ -10,7 +10,6 @@
 THIRD_PARTY_INCLUDES_START
 #include "websocketpp/config/asio_no_tls.hpp"
 #include "websocketpp/server.hpp"
-#include <thread>
 THIRD_PARTY_INCLUDES_END
 
 #if PLATFORM_WINDOWS
