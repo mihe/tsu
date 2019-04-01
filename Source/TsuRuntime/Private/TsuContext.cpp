@@ -803,15 +803,25 @@ void FTsuContext::OnConsoleTrace(const v8::FunctionCallbackInfo<v8::Value>& Info
 {
 	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
 
-	FString ScriptName;
-	FString FunctionName;
-	int32 LineNumber = 0;
-	GetCallSite(ScriptName, FunctionName, LineNumber);
-
 	FString Message;
 	if (ensureV8(ValuesToString(ExtractArgs(Info), Message)))
 	{
-		UE_LOG(LogTsu, Log, TEXT("%s (at %s:%s:%d)"), *Message, *ScriptName, *FunctionName, LineNumber);
+		UE_LOG(LogTsu, Log, TEXT("%s"), *Message);
+
+		v8::Local<v8::StackTrace> StackTrace = v8::StackTrace::CurrentStackTrace(Isolate, 10, v8::StackTrace::kOverview);
+		const int32 NumFrames = StackTrace->GetFrameCount();
+
+		for (int32 Index = 0; Index < NumFrames; ++Index)
+		{
+			v8::Local<v8::StackFrame> StackFrame = StackTrace->GetFrame(Isolate, Index);
+
+			const FString ScriptName = V8_TO_TCHAR(StackFrame->GetScriptName());
+			const FString FunctionName = V8_TO_TCHAR(StackFrame->GetFunctionName());
+			const int32 Line = StackFrame->GetLineNumber();
+			const int32 Column = StackFrame->GetColumn();
+
+			UE_LOG(LogTsu, Log, TEXT("  at %s:%s:%d:%d"), *ScriptName, *FunctionName, Line, Column);
+		}
 	}
 }
 

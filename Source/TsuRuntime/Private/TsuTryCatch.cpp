@@ -44,7 +44,7 @@ void FTsuTryCatch::Check()
 		const int32 Line = StackFrame->GetLineNumber();
 		const int32 Column = StackFrame->GetColumn();
 
-		UE_LOG(LogTsuRuntime, Error, TEXT("    at %s:%s:%d:%d"), *ScriptName, *FunctionName, Line, Column);
+		UE_LOG(LogTsuRuntime, Error, TEXT("  at %s:%s:%d:%d"), *ScriptName, *FunctionName, Line, Column);
 	}
 
 #if WITH_EDITOR
