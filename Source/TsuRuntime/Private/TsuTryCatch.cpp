@@ -28,13 +28,24 @@ void FTsuTryCatch::Check()
 	v8::Local<v8::Context> Context = Isolate->GetCurrentContext();
 	v8::Local<v8::Message> Exception = Catcher.Message();
 
-	FString Message = TEXT("[V8] ") + V8_TO_TCHAR(Exception->Get());
-	FString ScriptName = V8_TO_TCHAR(Exception->GetScriptResourceName().As<v8::String>());
-	int32 ScriptLine = Exception->GetLineNumber(Context).ToChecked();
-	int32 ScriptColumn = Exception->GetStartColumn(Context).ToChecked();
+	const FString Message = TEXT("[V8] ") + V8_TO_TCHAR(Exception->Get());
 
 	UE_LOG(LogTsuRuntime, Error, TEXT("%s"), *Message);
-	UE_LOG(LogTsuRuntime, Error, TEXT("    at %s:%d:%d"), *ScriptName, ScriptLine, ScriptColumn);
+
+	v8::Local<v8::StackTrace> StackTrace = Exception->GetStackTrace();
+	const int32 NumFrames = StackTrace->GetFrameCount();
+
+	for (int32 Index = 0; Index < NumFrames; ++Index)
+	{
+		v8::Local<v8::StackFrame> StackFrame = StackTrace->GetFrame(Isolate, Index);
+
+		const FString ScriptName = V8_TO_TCHAR(StackFrame->GetScriptName());
+		const FString FunctionName = V8_TO_TCHAR(StackFrame->GetFunctionName());
+		const int32 Line = StackFrame->GetLineNumber();
+		const int32 Column = StackFrame->GetColumn();
+
+		UE_LOG(LogTsuRuntime, Error, TEXT("    at %s:%s:%d:%d"), *ScriptName, *FunctionName, Line, Column);
+	}
 
 #if WITH_EDITOR
 	static TMap<uint32, TWeakPtr<SNotificationItem>> Notifications;

@@ -41,6 +41,8 @@ v8::Isolate* FTsuIsolate::Get()
 					UTF8_TO_TCHAR(Message));
 			});
 
+		Result->SetCaptureStackTraceForUncaughtExceptions(true);
+
 		Result->Enter();
 
 		static FTsuHeapStats HeapStats{Result};
