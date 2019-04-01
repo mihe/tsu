@@ -32,7 +32,7 @@ TSU utilizes the existing auto-reimport features in UE4, meaning your code will 
 
 ### Blueprint integration
 
-Functions written in TypeScript look and behave just like regular Blueprint functions.
+The functions you export from TypeScript are immediately available in Blueprint, and look and behave just like regular Blueprint functions.
 
 ![Example][exb]
 
