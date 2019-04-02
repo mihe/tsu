@@ -144,7 +144,7 @@ The TypeScript config should be located at `Content/Scripts/tsconfig.json`, and 
 }
 ```
 
-You can also add more [compiler options][opt] to it, like `"noUnusedLocals": true`.
+You can also add more [compiler options][opt] to it, like `"noUnusedLocals": true` or `"noUnusedParameters": true`.
 
 Now you can start adding your `.ts` files to `Content/Scripts/Source`.
 
