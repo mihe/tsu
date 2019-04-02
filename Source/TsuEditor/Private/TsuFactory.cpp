@@ -106,13 +106,15 @@ UTsuBlueprint* UTsuFactory::CreateBlueprint(UClass* Class, UObject* Parent, FNam
 			UTsuBlueprintGeneratedClass::StaticClass(),
 			TEXT("UTsuFactory")));
 
-	FEditorDelegates::OnAssetPreImport.Broadcast(this, Class, Parent, Name, Type);
+	auto ImportSubsystem = GEditor->GetEditorSubsystem<UImportSubsystem>();
+
+	ImportSubsystem->OnAssetPreImport.Broadcast(this, Class, Parent, Name, Type);
 
 	Blueprint->AssetImportData->Update(CurrentFilename);
 
 	FKismetEditorUtilities::CompileBlueprint(Blueprint);
 
-	FEditorDelegates::OnAssetPostImport.Broadcast(this, Blueprint);
+	ImportSubsystem->OnAssetPostImport.Broadcast(this, Blueprint);
 
 	return Blueprint;
 }
@@ -136,7 +138,9 @@ UTsuBlueprint* UTsuFactory::UpdateBlueprint(
 		});
 	}();
 
-	FEditorDelegates::OnAssetPreImport.Broadcast(this, Class, Parent, Name, Type);
+	auto ImportSubsystem = GEditor->GetEditorSubsystem<UImportSubsystem>();
+
+	ImportSubsystem->OnAssetPreImport.Broadcast(this, Class, Parent, Name, Type);
 
 	Blueprint->Modify(true);
 
@@ -190,7 +194,7 @@ UTsuBlueprint* UTsuFactory::UpdateBlueprint(
 		FKismetEditorUtilities::CompileBlueprint(Blueprint);
 	}
 
-	FEditorDelegates::OnAssetPostImport.Broadcast(this, Blueprint);
+	ImportSubsystem->OnAssetPostImport.Broadcast(this, Blueprint);
 
 	return Blueprint;
 }

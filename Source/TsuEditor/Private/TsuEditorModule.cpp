@@ -77,12 +77,11 @@ public:
 	void Compile(
 		UBlueprint* Blueprint,
 		const FKismetCompilerOptions& CompileOptions,
-		FCompilerResultsLog& Results,
-		TArray<UObject*>* ObjLoaded) override
+		FCompilerResultsLog& Results) override
 	{
 		if (auto TsuBlueprint = Cast<UTsuBlueprint>(Blueprint))
 		{
-			FTsuBlueprintCompiler Compiler(TsuBlueprint, Results, CompileOptions, ObjLoaded);
+			FTsuBlueprintCompiler Compiler{TsuBlueprint, Results, CompileOptions};
 			Compiler.Compile();
 			check(Compiler.NewClass);
 		}
@@ -96,8 +95,7 @@ public:
 		return MakeShared<FTsuBlueprintCompiler>(
 			CastChecked<UTsuBlueprint>(InBlueprint),
 			InMessageLog,
-			InCompileOptions,
-			nullptr);
+			InCompileOptions);
 	}
 
 private:

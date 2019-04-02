@@ -9,9 +9,8 @@
 FTsuRuntimeBlueprintCompiler::FTsuRuntimeBlueprintCompiler(
 	UBlueprint* SourceSketch,
 	FCompilerResultsLog& MessageLog,
-	const FKismetCompilerOptions& CompilerOptions,
-	TArray<UObject*>* ObjLoaded)
-	: Super(SourceSketch, MessageLog, CompilerOptions, ObjLoaded)
+	const FKismetCompilerOptions& CompilerOptions)
+	: Super(SourceSketch, MessageLog, CompilerOptions)
 {
 }
 

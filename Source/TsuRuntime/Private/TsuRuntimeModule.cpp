@@ -122,8 +122,7 @@ private:
 		return MakeShared<FTsuRuntimeBlueprintCompiler>(
 			CastChecked<UTsuBlueprint>(InBlueprint),
 			InMessageLog,
-			InCompileOptions,
-			nullptr);
+			InCompileOptions);
 	}
 
 	void AddCleanupDelegates()

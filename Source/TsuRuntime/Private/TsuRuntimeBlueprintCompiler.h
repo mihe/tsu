@@ -16,8 +16,7 @@ public:
 	FTsuRuntimeBlueprintCompiler(
 		UBlueprint* SourceSketch,
 		FCompilerResultsLog& MessageLog,
-		const FKismetCompilerOptions& CompilerOptions,
-		TArray<UObject*>* ObjLoaded);
+		const FKismetCompilerOptions& CompilerOptions);
 
 private:
 	void SpawnNewClass(const FString& NewClassName) override;

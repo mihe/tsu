@@ -29,8 +29,7 @@ public:
 	FTsuBlueprintCompiler(
 		UBlueprint* SourceSketch,
 		FCompilerResultsLog& MessageLog,
-		const FKismetCompilerOptions& CompilerOptions,
-		TArray<UObject*>* ObjLoaded);
+		const FKismetCompilerOptions& CompilerOptions);
 
 	static TArray<FTsuCompilationMessage> CompileScript(const FString& Filename, struct FTsuParsedFile& Result);
 
