@@ -82,7 +82,7 @@ _(TSU is not currently on [Unreal Marketplace][mkt], but will be once it's in be
 Please note that **currently**...
 
 - TSU is in **alpha**
-- TSU has **only** been tested with **Unreal Engine 4.21**
+- TSU has **only** been tested with **Unreal Engine 4.22**
 - You can **not** use TSU outside of Win64 **editor** builds
 - You can **not** use TSU in packaged/cooked builds
 - There **will** be breaking changes in upcoming versions
@@ -269,7 +269,7 @@ _(This only applies if you're **not** using the pre-built binaries found in [Rel
 
 ### Prerequisites
 
-- [Unreal Engine 4.21][ue4]
+- [Unreal Engine 4.22][ue4]
 - [Visual Studio 2017][vss]
 - (Optional) [Node.js 10.15][njs] (or later)
 
