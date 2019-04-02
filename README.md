@@ -103,11 +103,11 @@ _(For a reference to these steps you can look at the [examples project][tex])_
 1. Click on the `Scripting` category under `Project` (at the bottom)
 1. Check the `Enabled` checkbox for `TypeScript for Unreal`
 1. Restart the editor as prompted
-1. Configure the content monitoring [(as described below)](#content-monitoring)
-1. Add the TypeScript config [(as described below)](#typescript-config)
-1. _(Optional)_ Choose text editor [(as described below)](#text-editor)
-1. _(Optional)_ Setup hot-reloading [(as described below)](#hot-reloading-1)
-1. _(Optional)_ Setup debugging [(as described below)](#debugging-with-visual-studio-code)
+1. [Configure the content monitoring](#content-monitoring)
+1. [Add the TypeScript config](#typescript-config)
+1. _(Optional)_ [Choose text editor](#text-editor)
+1. _(Optional)_ [Setup hot-reloading](#hot-reloading-1)
+1. _(Optional)_ [Setup debugging](#debugging-with-visual-studio-code)
 
 ### Content monitoring
 
@@ -170,7 +170,7 @@ Make sure `Monitor Content Directories` is enabled, then expand the advanced set
 
 ### Debugging (with Visual Studio Code)
 
-First off, add `Scripts/.vscode/*` to be excluded from the content monitoring [(as described above)](#content-monitoring).
+First off, add `Scripts/.vscode/*` to be excluded from the [content monitoring](#content-monitoring).
 
 TSU listens for V8 debuggers on port 19216. So you'll want a `Content/Scripts/.vscode/launch.json` that looks like this:
 
@@ -203,7 +203,7 @@ If you want to add a package like [Lodash][lds] to your project, you need to tak
 
 First off, make sure you have [Node.js][njs] installed.
 
-Then add the following files to be excluded from the content monitoring [(as described above)](#content-monitoring):
+Then add the following files to be excluded from the [content monitoring](#content-monitoring):
 
 - `Scripts/node_modules/*`
 - `Scripts/package.json`
