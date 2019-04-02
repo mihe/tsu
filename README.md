@@ -247,7 +247,7 @@ As you start up the Unreal editor TSU will trawl through all of the public-facin
 
 When your TypeScript file gets imported into Unreal, TSU will compile that TypeScript code into JavaScript using the official TypeScript compiler. At the same time it looks at what functions you are exporting and creates a Blueprint function library containing native Blueprint functions that match the ones you exported, doing its best to translate between the two.
 
-The transpiled JavaScript code is then loaded into the V8 runtime automatically as needed, and whenever you invoke one of the these new Blueprint functions TSU will transparently convert values between Blueprint and V8, to give you a familiar experience on either end.
+The transpiled JavaScript code is then loaded into the V8 runtime automatically as needed, and whenever you invoke one of these new Blueprint functions TSU will transparently convert values between Blueprint and V8, to give you a familiar experience on either end.
 
 However, there are some inherent quirks with mapping a scripting language to Blueprint that might be good to know before diving too deep into TSU, please [see the wiki][wki] for more details.
 
