@@ -270,7 +270,7 @@ _(This only applies if you're **not** using the pre-built binaries found in [Rel
 ### Prerequisites
 
 - [Unreal Engine 4.22][ue4]
-- [Visual Studio 2017][vss]
+- [Visual Studio][vss]
 - (Optional) [Node.js 10.15][njs] (or later)
 
 ### Plugin
