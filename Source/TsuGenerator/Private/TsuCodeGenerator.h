@@ -1,3 +1,7 @@
+/**
+ * #note(#mihe): This module is not currently used and is only meant to serve as a starting point for future development
+ */
+
 #pragma once
 
 #include "CoreMinimal.h"
