@@ -95,8 +95,6 @@ If you still want to try it, head over to [Releases][rls].
 
 _(For a reference to these steps you can look at the [examples project][tex])_
 
-### Installation
-
 1. Extract the `TSU` directory into the `Plugins` directory of your project. Create one if it doesn't exist already.
 1. Open your project in the Unreal editor (or restart if already open)
 1. Go to `Plugins` under the `Edit` menu
