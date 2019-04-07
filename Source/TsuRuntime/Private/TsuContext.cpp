@@ -54,6 +54,7 @@ FTsuContext::FTsuContext()
 	FCoreUObjectDelegates::GetPostGarbageCollect().AddRaw(this, &FTsuContext::OnPostGarbageCollect);
 
 	v8::Local<v8::Context> Context = v8::Context::New(Isolate);
+	Context->AllowCodeGenerationFromStrings(false);
 	Context->Enter();
 	GlobalContext.Reset(Isolate, Context);
 
