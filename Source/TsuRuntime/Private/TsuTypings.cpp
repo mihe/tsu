@@ -23,7 +23,7 @@
 
 const TCHAR* FTsuTypings::MetaHidden = TEXT("Hidden");
 const TCHAR* FTsuTypings::MetaDisplayName = TEXT("DisplayName");
-const FName FTsuTypings::MetaExtensionLibrary = TEXT("TsuExtensionLibrary");
+const FName FTsuTypings::MetaTsuExtensionLibrary = TEXT("TsuExtensionLibrary");
 
 FString& FTsuTypings::ResetPersistentOutputBuffer()
 {
@@ -948,7 +948,7 @@ const FString& FTsuTypings::TailorNameOfField(const UField* Field)
 	{
 		FString FieldName = Field->GetName();
 
-		if (Field->HasMetaData(MetaExtensionLibrary))
+		if (Field->HasMetaData(MetaTsuExtensionLibrary))
 			CamelCase(FieldName);
 		else
 			TailorNameOfField(FieldName);
@@ -978,7 +978,7 @@ const FString& FTsuTypings::TailorNameOfExtension(const UStruct* Type, UFunction
 	{
 		FString FunctionName = Function->GetName();
 
-		if (Function->HasMetaData(MetaExtensionLibrary))
+		if (Function->HasMetaData(MetaTsuExtensionLibrary))
 		{
 			CamelCase(FunctionName);
 		}
