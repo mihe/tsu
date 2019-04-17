@@ -63,6 +63,7 @@ FTsuContext::FTsuContext()
 	InitializeRequire();
 	InitializeArrayProxy();
 	InitializeStructProxy();
+	InitializeKeys();
 
 	Inspector.Emplace(FTsuIsolate::GetPlatform(), Context);
 }
@@ -320,6 +321,31 @@ void FTsuContext::InitializeDelegates()
 
 	GlobalDelegateTemplate.Reset(Isolate, DelegateTemplate);
 	GlobalMulticastDelegateTemplate.Reset(Isolate, MulticastDelegateTemplate);
+}
+
+void FTsuContext::InitializeKeys()
+{
+	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
+	v8::Local<v8::Object> Keys = v8::Object::New(Isolate);
+
+	TArray<FKey> AllKeys;
+	EKeys::GetAllKeys(AllKeys);
+
+	UScriptStruct* Type = FKey::StaticStruct();
+
+	for (const FKey& Key : AllKeys)
+	{
+		void* Object = FMemory::Malloc(Type->GetStructureSize());
+		Type->InitializeStruct(Object);
+		Type->CopyScriptStruct(Object, &Key);
+
+		v8::Local<v8::String> KeyName = TCHAR_TO_V8(Key.ToString());
+		v8::Local<v8::Object> Value = ReferenceStructObject(Object, Type);
+
+		Keys->Set(Context, KeyName, Value);
+	}
+
+	GlobalKeys.Reset(Isolate, Keys);
 }
 
 void FTsuContext::InitializeRequire()
@@ -1386,11 +1412,19 @@ void FTsuContext::OnImport(const v8::FunctionCallbackInfo<v8::Value>& Info)
 		return;
 
 	const FString TypeName = V8_TO_TCHAR(TypeNameArg.As<v8::String>());
-	UField* Type = FTsuReflection::FindTypeByName(TypeName);
-	auto Object = Cast<UStruct>(Type);
-	ensureV8(Object != nullptr);
 
-	Info.GetReturnValue().Set(FindOrAddConstructor(Object));
+	if (TypeName == TEXT("EKeys"))
+	{
+		Info.GetReturnValue().Set(GlobalKeys.Get(Isolate));
+	}
+	else
+	{
+		UField* Type = FTsuReflection::FindTypeByName(TypeName);
+		auto Object = Cast<UStruct>(Type);
+		ensureV8(Object != nullptr);
+
+		Info.GetReturnValue().Set(FindOrAddConstructor(Object));
+	}
 }
 
 void FTsuContext::OnGetProperty(const v8::FunctionCallbackInfo<v8::Value>& Info)

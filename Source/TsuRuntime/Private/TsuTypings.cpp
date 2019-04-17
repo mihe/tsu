@@ -106,6 +106,7 @@ void FTsuTypings::WriteAllTypings()
 {
 	WriteCoreTypings();
 	WriteGlobalTypings();
+	WriteKeyTypings();
 
 	FTsuReflection::VisitAllTypes([&](UField* Type, const FTsuTypeSet& References)
 	{
@@ -197,6 +198,34 @@ void FTsuTypings::WriteGlobalTypings()
 	TSU_WRITELN("}");
 
 	SaveTypings(TEXT("TsuGlobals"), Output);
+}
+
+void FTsuTypings::WriteKeyTypings()
+{
+	WriteTypings(FKey::StaticStruct());
+
+	FString& Output = ResetPersistentOutputBuffer();
+
+	TSU_WRITELN("// Generated file, any changes will be overwritten");
+	TSU_WRITELN("");
+	TSU_WRITELN("import { DeepReadonly } from '../TsuCore';");
+	TSU_WRITELN("import { Key } from '../Key';");
+	TSU_WRITELN("");
+	TSU_WRITELN("declare const EKeys: DeepReadonly<{");
+
+	TArray<FKey> AllKeys;
+	EKeys::GetAllKeys(AllKeys);
+
+	for (const FKey& Key : AllKeys)
+	{
+		TSU_WRITELNF("\t%s: Key;", *Key.ToString());
+	}
+
+	TSU_WRITELN("}>;");
+	TSU_WRITELN("");
+	TSU_WRITELN("export { EKeys }");
+
+	SaveTypings(TEXT("EKeys"), Output);
 }
 
 bool FTsuTypings::WriteTypings(UField* Type, const FTsuTypeSet& References)

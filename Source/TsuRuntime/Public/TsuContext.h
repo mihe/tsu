@@ -129,6 +129,9 @@ private:
 	/** Creates and stores the templates for regular and multicast delegates */
 	void InitializeDelegates();
 
+	/** Creates and stores the `EKeys` object */
+	void InitializeKeys();
+
 	/** Loads and binds the code for `require` */
 	void InitializeRequire();
 
@@ -444,6 +447,9 @@ private:
 
 	/** ... */
 	static v8::Global<v8::Function> GlobalStructHandlerConstructor;
+
+	/** ... */
+	v8::Global<v8::Object> GlobalKeys;
 
 	/** ... */
 	TMap<FString, TSharedPtr<FTsuModule>> LoadedModules;

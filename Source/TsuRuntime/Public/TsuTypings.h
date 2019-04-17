@@ -13,6 +13,7 @@ class TSURUNTIME_API FTsuTypings
 public:
 	static void WriteCoreTypings();
 	static void WriteGlobalTypings();
+	static void WriteKeyTypings();
 	static void WriteAllTypings();
 	static void WriteTypings(UField* Type);
 	static void WriteDependencyTypings(class UTsuBlueprintGeneratedClass* Class);
