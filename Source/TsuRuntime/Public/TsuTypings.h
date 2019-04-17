@@ -33,8 +33,8 @@ public:
 
 	static FString GetPropertyType(UProperty* Property, bool bIsReadOnly = false);
 
-	static const FString& TailorNameOfType(const UField* Type);
-	static const FString& TailorNameOfField(const UField* Field);
+	static const FString& TailorNameOfType(UField* Type);
+	static const FString& TailorNameOfField(UField* Field);
 	static const FString& TailorNameOfExtension(const UStruct* Type, UFunction* Function);
 
 private:

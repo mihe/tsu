@@ -30,6 +30,9 @@ public:
 	static bool IsInternalFunction(UFunction* Function);
 	static bool IsExposedFunction(UFunction* Function);
 	static bool IsStaticBlueprintFunction(UFunction* Function);
+	static bool IsExplicitExtension(UClass* Class);
+	static bool IsExplicitExtension(UFunction* Function);
+	static bool IsExplicitExtension(UField* Field);
 	static bool IsExtensionFunction(UFunction* Function);
 	static bool IsInvalidClass(UClass* Class);
 	static bool IsValidClass(UClass* Class);

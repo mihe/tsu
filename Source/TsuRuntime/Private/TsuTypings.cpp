@@ -23,7 +23,6 @@
 
 const TCHAR* FTsuTypings::MetaHidden = TEXT("Hidden");
 const TCHAR* FTsuTypings::MetaDisplayName = TEXT("DisplayName");
-const FName FTsuTypings::MetaTsuExtensionLibrary = TEXT("TsuExtensionLibrary");
 
 FString& FTsuTypings::ResetPersistentOutputBuffer()
 {
@@ -161,7 +160,7 @@ void FTsuTypings::WriteCoreTypings()
 	TSU_WRITELN("\tDeepReadonlyObject,");
 	TSU_WRITELN("\tDelegate,");
 	TSU_WRITELN("\tMulticastDelegate");
-	TSU_WRITELN("}");
+	TSU_WRITELN("};");
 
 	SaveTypings(TEXT("TsuCore"), Output);
 }
@@ -223,7 +222,7 @@ void FTsuTypings::WriteKeyTypings()
 
 	TSU_WRITELN("}>;");
 	TSU_WRITELN("");
-	TSU_WRITELN("export { EKeys }");
+	TSU_WRITELN("export { EKeys };");
 
 	SaveTypings(TEXT("EKeys"), Output);
 }
@@ -244,7 +243,7 @@ bool FTsuTypings::WriteTypings(UField* Type, const FTsuTypeSet& References)
 	}
 
 	TArray<UField*> SortedReferences = References.Array();
-	SortedReferences.Sort([](const UField& Lhs, const UField& Rhs)
+	SortedReferences.Sort([](UField& Lhs, UField& Rhs)
 	{
 		return TailorNameOfType(&Lhs) < TailorNameOfType(&Rhs);
 	});
@@ -354,7 +353,7 @@ void FTsuTypings::WriteEnum(FString& Output, UEnum* Enum)
 
 	TSU_WRITELN("}");
 	TSU_WRITELN("");
-	TSU_WRITELNF("export { %s }", *TypeName);
+	TSU_WRITELNF("export { %s };", *TypeName);
 }
 
 void FTsuTypings::WriteObject(FString& Output, UStruct* Struct)
@@ -449,7 +448,7 @@ void FTsuTypings::WriteObject(FString& Output, UStruct* Struct)
 
 	TSU_WRITELN("}");
 	TSU_WRITELN("");
-	TSU_WRITELNF("export { %s }", *TypeName);
+	TSU_WRITELNF("export { %s };", *TypeName);
 }
 
 void FTsuTypings::WriteToolTip(FString& Output, UFunction* Function, bool bIsExtension, bool bIndent)
@@ -898,10 +897,10 @@ FString& FTsuTypings::TrimRedundancy(FString& Name, const FString& ParentName)
 	return Name;
 }
 
-const FString& FTsuTypings::TailorNameOfType(const UField* Type)
+const FString& FTsuTypings::TailorNameOfType(UField* Type)
 {
 	using FCachedName = TPair<FName, FString>;
-	using FCache = TMap<const UField*, FCachedName>;
+	using FCache = TMap<UField*, FCachedName>;
 
 	static FCache Cache = []
 	{
@@ -958,7 +957,7 @@ FString FTsuTypings::TailorNameOfField(FString&& InName)
 	return Name;
 }
 
-const FString& FTsuTypings::TailorNameOfField(const UField* Field)
+const FString& FTsuTypings::TailorNameOfField(UField* Field)
 {
 	using FCachedName = TPair<FName, FString>;
 	using FCache = TMap<const UField*, FCachedName>;
@@ -977,7 +976,7 @@ const FString& FTsuTypings::TailorNameOfField(const UField* Field)
 	{
 		FString FieldName = Field->GetName();
 
-		if (Field->HasMetaData(MetaTsuExtensionLibrary))
+		if (FTsuReflection::IsExplicitExtension(Field))
 			CamelCase(FieldName);
 		else
 			TailorNameOfField(FieldName);
@@ -1007,7 +1006,7 @@ const FString& FTsuTypings::TailorNameOfExtension(const UStruct* Type, UFunction
 	{
 		FString FunctionName = Function->GetName();
 
-		if (Function->HasMetaData(MetaTsuExtensionLibrary))
+		if (FTsuReflection::IsExplicitExtension(Function))
 		{
 			CamelCase(FunctionName);
 		}

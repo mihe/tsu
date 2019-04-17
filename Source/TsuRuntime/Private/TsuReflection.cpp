@@ -57,10 +57,7 @@ bool FTsuReflection::UsesInternalTypes(UFunction* Function)
 
 bool FTsuReflection::IsInternalFunction(UFunction* Function)
 {
-	if (Function->GetBoolMetaData(MetaBlueprintInternalUseOnly))
-		return !Function->HasMetaData(MetaTsuExtensionLibrary);
-
-	return UsesInternalTypes(Function);
+	return Function->GetBoolMetaData(MetaBlueprintInternalUseOnly) || UsesInternalTypes(Function);
 }
 
 bool FTsuReflection::IsExposedFunction(UFunction* Function)
@@ -79,9 +76,30 @@ bool FTsuReflection::IsStaticBlueprintFunction(UFunction* Function)
 	return IsExposedFunction(Function) && Function->HasAllFunctionFlags(FUNC_Static);
 }
 
+bool FTsuReflection::IsExplicitExtension(UClass* Class)
+{
+	return Class->HasMetaData(MetaTsuExtensionLibrary);
+}
+
+bool FTsuReflection::IsExplicitExtension(UFunction* Function)
+{
+	return Function->HasMetaData(MetaTsuExtensionLibrary) || IsExplicitExtension(Function->GetOuterUClass());
+}
+
+bool FTsuReflection::IsExplicitExtension(UField* Field)
+{
+	if (auto Function = Cast<UFunction>(Field))
+		return IsExplicitExtension(Function);
+	else if (auto Class = Cast<UClass>(Field))
+		return IsExplicitExtension(Class);
+	else
+		return false;
+}
+
 bool FTsuReflection::IsExtensionFunction(UFunction* Function)
 {
 	return (
+		IsExplicitExtension(Function) ||
 		IsStaticBlueprintFunction(Function) &&
 		!Function->HasMetaData(MetaWorldContext) &&
 		!Function->HasMetaData(MetaNativeMakeFunc) &&
@@ -306,7 +324,10 @@ void FTsuReflection::VisitBreakFunctions(const BreakVisitor& Visitor)
 		Visitor(Entry.Key, Entry.Value);
 }
 
-void FTsuReflection::VisitObjectProperties(const PropertyVisitor& Visitor, UStruct* Object, bool bIncludeDerived)
+void FTsuReflection::VisitObjectProperties(
+	const PropertyVisitor& Visitor,
+	UStruct* Object,
+	bool bIncludeDerived)
 {
 	const bool bIsStruct = Object->IsA<UScriptStruct>();
 
