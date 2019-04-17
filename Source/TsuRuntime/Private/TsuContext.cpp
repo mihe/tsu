@@ -75,7 +75,6 @@ FTsuContext::~FTsuContext()
 	for (auto& Struct : AliveStructs)
 	{
 		FStructKey& Key = Struct.Key;
-		v8::Global<v8::Object>& Handle = Struct.Value;
 
 		void* Object = Key.Key;
 		UScriptStruct* Type = Key.Value;
@@ -400,7 +399,7 @@ v8::Local<v8::FunctionTemplate> FTsuContext::AddTemplate(UStruct* Type)
 		ConstructorTemplate = v8::FunctionTemplate::New(
 			Isolate,
 			&FTsuContext::_OnClassNew,
-			v8::External::New(Isolate, Type));
+			v8::External::New(Isolate, ClassType));
 	}
 	else if (auto ScriptStructType = Cast<UScriptStruct>(Type))
 	{
@@ -764,8 +763,6 @@ void FTsuContext::OnConsoleLog(const v8::FunctionCallbackInfo<v8::Value>& Info)
 
 void FTsuContext::OnConsoleWarning(const v8::FunctionCallbackInfo<v8::Value>& Info)
 {
-	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
-
 	FString ScriptName;
 	FString FunctionName;
 	int32 LineNumber = 0;
@@ -780,8 +777,6 @@ void FTsuContext::OnConsoleWarning(const v8::FunctionCallbackInfo<v8::Value>& In
 
 void FTsuContext::OnConsoleError(const v8::FunctionCallbackInfo<v8::Value>& Info)
 {
-	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
-
 	FString ScriptName;
 	FString FunctionName;
 	int32 LineNumber = 0;
@@ -802,8 +797,6 @@ void FTsuContext::OnConsoleError(const v8::FunctionCallbackInfo<v8::Value>& Info
 
 void FTsuContext::OnConsoleTrace(const v8::FunctionCallbackInfo<v8::Value>& Info)
 {
-	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
-
 	FString Message;
 	if (ensureV8(ValuesToString(ExtractArgs(Info), Message)))
 	{
