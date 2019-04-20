@@ -7,7 +7,7 @@
 
 #include "TsuTransformLibrary.generated.h"
 
-UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtensionLibrary))
+UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtension))
 class UTsuTransformLibrary final
 	: public UBlueprintFunctionLibrary
 {
@@ -71,6 +71,13 @@ public:
 		return Transform * Other;
 	}
 
+	/** */
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Transform"))
+	static bool AnyHasNegativeScale(FVector Scale, FVector OtherScale)
+	{
+		return FTransform::AnyHasNegativeScale(Scale, OtherScale);
+	}
+
 	/** Scale the location part of the Transform by the supplied vector. */
 	UFUNCTION(BlueprintPure)
 	static FTransform ScaleLocation(FTransform Transform, FVector Scale)
@@ -89,9 +96,9 @@ public:
 
 	/** Sets scale to (1,1,1) and normalizes rotation */
 	UFUNCTION(BlueprintPure)
-	static FTransform RemoveScaling(FTransform Transform)
+	static FTransform RemoveScaling(FTransform Transform, float Tolerance = 0.00000001f)
 	{
-		Transform.RemoveScaling(0.00000001f);
+		Transform.RemoveScaling(Tolerance);
 		return Transform;
 	}
 
@@ -138,9 +145,9 @@ public:
 	 * For example, if T was an object's transform, this would transform a position from local space to world space.
 	 */
 	UFUNCTION(BlueprintPure)
-	static FVector TransformLocation(const FTransform& Transform, FVector V)
+	static FVector TransformLocation(const FTransform& Transform, FVector Location)
 	{
-		return UKismetMathLibrary::TransformLocation(Transform, V);
+		return UKismetMathLibrary::TransformLocation(Transform, Location);
 	}
 
 	/** 
@@ -250,6 +257,13 @@ public:
 	}
 
 	/** */
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Transform"))
+	static FVector GetSafeScaleReciprocal(FVector Scale, float Tolerance = 0.00000001f)
+	{
+		return FTransform::GetSafeScaleReciprocal(Scale, Tolerance);
+	}
+
+	/** */
 	UFUNCTION(BlueprintPure)
 	static float GetDeterminant(const FTransform& Transform)
 	{
@@ -260,7 +274,7 @@ public:
 	 * Checks the components for NaN's
 	 * @return Returns true if any component (rotation, location, or scale) is a NaN
 	 */
-	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(TsuExtensionLibrary, DisplayName="Contains NaN"))
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(TsuExtension, DisplayName="Contains NaN"))
 	static bool ContainsNaN(const FTransform& Transform)
 	{
 		return Transform.ContainsNaN();
@@ -345,6 +359,26 @@ public:
 	{
 		Transform.AddToTranslation(LocationDelta);
 		return Transform;
+	}
+
+	/**
+	* Add the translations from two FTransforms and return the result.
+	* @return A.Translation + B.Translation
+	*/
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Transform"))
+	static FVector AddTranslations(const FTransform& A, const FTransform& B)
+	{
+		return FTransform::AddTranslations(A, B);
+	}
+
+	/**
+	* Subtract translations from two FTransforms and return the difference.
+	* @return A.Translation - B.Translation.
+	*/
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Transform"))
+	static FVector SubtractTranslations(const FTransform& A, const FTransform& B)
+	{
+		return FTransform::SubtractTranslations(A, B);
 	}
 
 	/**

@@ -7,7 +7,7 @@
 
 #include "TsuVectorLibrary.generated.h"
 
-UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtensionLibrary))
+UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtension))
 class UTsuVectorLibrary final
 	: public UBlueprintFunctionLibrary
 {
@@ -620,7 +620,7 @@ public:
 	 *
 	 * @return true if there are any non-finite values in this vector, false otherwise.
 	 */
-	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(TsuExtensionLibrary, DisplayName="Contains NaN"))
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(TsuExtension, DisplayName="Contains NaN"))
 	static bool ContainsNaN(FVector Vector)
 	{
 		return Vector.ContainsNaN();
@@ -702,7 +702,7 @@ public:
 	 * @param Q Second vector.
 	 * @return Whether points are the same within a threshold. Uses fast distance approximation (linear per-component distance).
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Vector"))
 	static bool PointsAreSame(FVector P, FVector Q)
 	{
 		return FVector::PointsAreSame(P, Q);
@@ -716,7 +716,7 @@ public:
 	 * @param Dist Specified distance.
 	 * @return Whether two points are within the specified distance. Uses fast distance approximation (linear per-component distance).
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Vector"))
 	static bool PointsAreNear(FVector Point1, FVector Point2, float Dist)
 	{
 		return FVector::PointsAreNear(Point1, Point2, Dist);
@@ -730,7 +730,7 @@ public:
 	 * @param PlaneNormal The Normal of the plane (assumed to be unit length).
 	 * @return Signed distance between point and plane.
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Vector"))
 	static float PointPlaneDist(FVector Point, FVector PlaneBase, FVector PlaneNormal)
 	{
 		return FVector::PointPlaneDist(Point, PlaneBase, PlaneNormal);
@@ -743,7 +743,7 @@ public:
 	 * @param Plane The plane
 	 * @return Projection of Point onto Plane
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Vector"))
 	static FVector PointPlaneProject(FVector Point, const FPlane& Plane)
 	{
 		return FVector::PointPlaneProject(Point, Plane);
@@ -756,7 +756,7 @@ public:
 	 * @param  PlaneNormal Normal of the plane (assumed to be unit length).
 	 * @return Projection of V onto plane.
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Vector"))
 	static FVector VectorPlaneProject(FVector V, FVector PlaneNormal)
 	{
 		return FVector::VectorPlaneProject(V, PlaneNormal);
@@ -817,7 +817,7 @@ public:
 	 * @param Size The size of the box.
 	 * @return Pushout required.
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Vector"))
 	static float BoxPushOut(FVector Normal, FVector Size)
 	{
 		return FVector::BoxPushOut(Normal, Size);
@@ -831,7 +831,7 @@ public:
 	 * @param  ParallelCosineThreshold Normals are parallel if absolute value of dot product (cosine of angle between them) is greater than or equal to this. For example: cos(1.0 degrees).
 	 * @return true if vectors are nearly parallel, false otherwise.
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Vector"))
 	static bool Parallel(FVector Normal1, FVector Normal2, float ParallelCosineThreshold = 0.999845f)
 	{
 		return FVector::Parallel(Normal1, Normal2, ParallelCosineThreshold);
@@ -845,7 +845,7 @@ public:
 	 * @param  ParallelCosineThreshold Normals are coincident if dot product (cosine of angle between them) is greater than or equal to this. For example: cos(1.0 degrees).
 	 * @return true if vectors are coincident (nearly parallel and point in the same direction), false otherwise.
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Vector"))
 	static bool Coincident(FVector Normal1, FVector Normal2, float ParallelCosineThreshold = 0.999845f)
 	{
 		return FVector::Coincident(Normal1, Normal2, ParallelCosineThreshold);
@@ -859,7 +859,7 @@ public:
 	 * @param  OrthogonalCosineThreshold Normals are orthogonal if absolute value of dot product (cosine of angle between them) is less than or equal to this. For example: cos(89.0 degrees).
 	 * @return true if vectors are orthogonal (perpendicular), false otherwise.
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Vector"))
 	static bool Orthogonal(FVector Normal1, FVector Normal2, float OrthogonalCosineThreshold = 0.017455f)
 	{
 		return FVector::Orthogonal(Normal1, Normal2, OrthogonalCosineThreshold);
@@ -875,7 +875,7 @@ public:
 	 * @param ParallelCosineThreshold Normals are parallel if absolute value of dot product is greater than or equal to this.
 	 * @return true if the planes are coplanar, false otherwise.
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Vector"))
 	static bool Coplanar(FVector Base1, FVector Normal1, FVector Base2, FVector Normal2, float ParallelCosineThreshold = 0.999845f)
 	{
 		return FVector::Coplanar(Base1, Normal1, Base2, Normal2, ParallelCosineThreshold);
@@ -889,7 +889,7 @@ public:
 	 * @param Z The third vector.
 	 * @return The triple product: X dot (Y cross Z).
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Vector"))
 	static float Triple(FVector X, FVector Y, FVector Z)
 	{
 		return FVector::Triple(X, Y, Z);
@@ -903,7 +903,7 @@ public:
 	 * @param OutPoints Receives the output samples.
 	 * @return The path length.
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Vector"))
 	static float EvaluateBezier(const TArray<FVector>& ControlPoints, TArray<FVector>& OutPoints)
 	{
 		return FVector::EvaluateBezier(ControlPoints.GetData(), ControlPoints.Num(), OutPoints);
@@ -940,7 +940,7 @@ public:
 	 * @param NumConnectionsToBeValid Sometimes you will have long strings that come off the mass of points
 	 * which happen to have been chosen as Cluster starting points.  You want to be able to disregard those.
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Vector"))
 	static void GenerateClusterCenters(TArray<FVector>& Clusters, const TArray<FVector>& Points, int32 NumIterations, int32 NumConnectionsToBeValid)
 	{
 		return FVector::GenerateClusterCenters(Clusters, Points, NumIterations, NumConnectionsToBeValid);

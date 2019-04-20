@@ -15,7 +15,7 @@
 
 #include "TsuTimelineLibrary.generated.h"
 
-UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtensionLibrary))
+UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtension))
 class UTsuTimelineLibrary final
 	: public UBlueprintFunctionLibrary
 {

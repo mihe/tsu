@@ -7,7 +7,7 @@
 
 #include "TsuActorLibrary.generated.h"
 
-UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtensionLibrary))
+UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtension))
 class UTsuActorLibrary final
 	: public UBlueprintFunctionLibrary
 {

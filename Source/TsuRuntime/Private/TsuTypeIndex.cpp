@@ -43,13 +43,5 @@ UField* FTsuTypeIndex::Find(const FString& TypeName)
 		}
 	}
 
-	// If we still can't find it then the blueprint hasn't been loaded yet and we
-	// fall back on using UObject for now
-	if (!Result)
-	{
-		UE_LOG(LogTsuRuntime, Warning, TEXT("Failed to resolve object type '%s', falling back to 'UObject'..."), *TypeName);
-		return UObject::StaticClass();
-	}
-
 	return Result;
 }

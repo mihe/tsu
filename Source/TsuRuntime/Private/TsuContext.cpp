@@ -446,7 +446,7 @@ v8::Local<v8::FunctionTemplate> FTsuContext::AddTemplate(UStruct* Type)
 
 	v8::Local<v8::ObjectTemplate> PrototypeTemplate = ConstructorTemplate->PrototypeTemplate();
 
-	FTsuReflection::VisitObjectProperties([&](UProperty* Property, bool bIsReadOnly)
+	FTsuReflection::VisitProperties([&](UProperty* Property, bool bIsReadOnly)
 	{
 		v8::Local<v8::String> Name = TCHAR_TO_V8(FTsuTypings::TailorNameOfField(Property));
 		v8::Local<v8::External> Data = v8::External::New(Isolate, Property);
@@ -463,7 +463,7 @@ v8::Local<v8::FunctionTemplate> FTsuContext::AddTemplate(UStruct* Type)
 		PrototypeTemplate->SetAccessorProperty(Name, Getter, Setter);
 	}, Type);
 
-	FTsuReflection::VisitObjectMethods([&](UFunction* Method)
+	FTsuReflection::VisitMethods([&](UFunction* Method)
 	{
 		v8::Local<v8::String> Name = TCHAR_TO_V8(FTsuTypings::TailorNameOfField(Method));
 		v8::Local<v8::External> Data = v8::External::New(Isolate, Method);
@@ -488,9 +488,9 @@ v8::Local<v8::FunctionTemplate> FTsuContext::AddTemplate(UStruct* Type)
 		}
 	}, Type);
 
-	FTsuReflection::VisitObjectExtensions([&](UFunction* Extension)
+	FTsuReflection::VisitExtensionMethods([&](UFunction* Extension)
 	{
-		v8::Local<v8::String> Name = TCHAR_TO_V8(FTsuTypings::TailorNameOfExtension(Type, Extension));
+		v8::Local<v8::String> Name = TCHAR_TO_V8(FTsuTypings::TailorNameOfExtension(Extension));
 
 		v8::Local<v8::FunctionTemplate> Callback = v8::FunctionTemplate::New(
 			Isolate,
@@ -498,6 +498,18 @@ v8::Local<v8::FunctionTemplate> FTsuContext::AddTemplate(UStruct* Type)
 			v8::External::New(Isolate, Extension));
 
 		PrototypeTemplate->Set(Name, Callback);
+	}, Type);
+
+	FTsuReflection::VisitStaticExtensionMethods([&](UFunction* Extension)
+	{
+		v8::Local<v8::String> Name = TCHAR_TO_V8(FTsuTypings::TailorNameOfExtension(Extension));
+
+		v8::Local<v8::FunctionTemplate> Callback = v8::FunctionTemplate::New(
+			Isolate,
+			&FTsuContext::_OnCallStaticMethod,
+			v8::External::New(Isolate, Extension));
+
+		ConstructorTemplate->Set(Name, Callback);
 	}, Type);
 
 	if (auto Class = Cast<UClass>(Type))

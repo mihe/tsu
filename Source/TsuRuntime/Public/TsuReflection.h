@@ -10,7 +10,8 @@ class TSURUNTIME_API FTsuReflection
 	static const FName MetaNativeMakeFunc;
 	static const FName MetaNativeBreakFunc;
 	static const FName MetaBlueprintInternalUseOnly;
-	static const FName MetaTsuExtensionLibrary;
+	static const FName MetaTsuExtension;
+	static const FName MetaTsuStaticExtension;
 
 public:
 	using TypeVisitor = TFunction<void(UField*, const FTsuTypeSet&)>;
@@ -20,6 +21,7 @@ public:
 	using PropertyVisitor = TFunction<void(UProperty*, bool)>;
 	using MethodVisitor = TFunction<void(UFunction*)>;
 	using ExtensionVisitor = TFunction<void(UFunction*)>;
+	using StaticExtensionVisitor = TFunction<void(UFunction*)>;
 	using ParameterVisitor = TFunction<void(UProperty*)>;
 	using ReturnVisitor = TFunction<void(UProperty*)>;
 	using PropertyTypeVisitor = TFunction<void(UField*)>;
@@ -34,6 +36,7 @@ public:
 	static bool IsExplicitExtension(UFunction* Function);
 	static bool IsExplicitExtension(UField* Field);
 	static bool IsExtensionFunction(UFunction* Function);
+	static bool IsStaticExtension(UFunction* Function);
 	static bool IsInvalidClass(UClass* Class);
 	static bool IsValidClass(UClass* Class);
 	static bool IsExposedProperty(UProperty* Property);
@@ -51,9 +54,10 @@ public:
 	static void VisitFunctionLibraries(const LibraryVisitor& Visitor);
 	static void VisitMakeFunctions(const MakeVisitor& Visitor);
 	static void VisitBreakFunctions(const BreakVisitor& Visitor);
-	static void VisitObjectProperties(const PropertyVisitor& Visitor, UStruct* Object, bool bIncludeDerived = false);
-	static void VisitObjectMethods(const MethodVisitor& Visitor, UStruct* Object);
-	static void VisitObjectExtensions(const ExtensionVisitor& Visitor, UStruct* Object);
+	static void VisitProperties(const PropertyVisitor& Visitor, UStruct* Object, bool bIncludeDerived = false);
+	static void VisitMethods(const MethodVisitor& Visitor, UStruct* Object);
+	static void VisitExtensionMethods(const ExtensionVisitor& Visitor, UStruct* Object);
+	static void VisitStaticExtensionMethods(const StaticExtensionVisitor& Visitor, UStruct* Object);
 	static bool VisitFunctionParameters(const ParameterVisitor& Visitor, UFunction* Function, bool bSkipFirst = false, bool bSkipWorldContext = true);
 	static void VisitFunctionReturns(const ReturnVisitor& Visitor, UFunction* Function);
 	static void VisitPropertyType(const PropertyTypeVisitor& Visitor, UProperty* Property);
@@ -66,6 +70,10 @@ public:
 	static UFunction* FindBreakFunction(UStruct* Struct);
 	static bool HasMakeFunction(UStruct* Struct);
 	static bool HasBreakFunction(UStruct* Struct);
+
+	static UStruct* FindExtendedTypeNonStatic(UFunction* Function);
+	static UStruct* FindExtendedTypeStatic(UFunction* Function);
+	static UStruct* FindExtendedType(UFunction* Function);
 
 	static UField* FindTypeByName(const FString& TypeName);
 };

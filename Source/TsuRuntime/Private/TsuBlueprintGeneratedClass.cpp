@@ -283,6 +283,11 @@ UProperty* UTsuBlueprintGeneratedClass::NewParameterFromType(
 	else
 	{
 		UField* Type = FTsuReflection::FindTypeByName(TypeName);
+		if (!Type)
+		{
+			UE_LOG(LogTsuRuntime, Warning, TEXT("Failed to resolve object type '%s', falling back to 'UObject'..."), *TypeName);
+			Type = UObject::StaticClass();
+		}
 
 		if (Type == UClass::StaticClass())
 		{

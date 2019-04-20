@@ -19,7 +19,8 @@ const FName FTsuReflection::MetaWorldContext = TEXT("WorldContext");
 const FName FTsuReflection::MetaNativeMakeFunc = TEXT("NativeMakeFunc");
 const FName FTsuReflection::MetaNativeBreakFunc = TEXT("NativeBreakFunc");
 const FName FTsuReflection::MetaBlueprintInternalUseOnly = TEXT("BlueprintInternalUseOnly");
-const FName FTsuReflection::MetaTsuExtensionLibrary = TEXT("TsuExtensionLibrary");
+const FName FTsuReflection::MetaTsuExtension = TEXT("TsuExtension");
+const FName FTsuReflection::MetaTsuStaticExtension = TEXT("TsuStaticExtension");
 
 bool FTsuReflection::IsInternalType(UField* Type)
 {
@@ -78,12 +79,16 @@ bool FTsuReflection::IsStaticBlueprintFunction(UFunction* Function)
 
 bool FTsuReflection::IsExplicitExtension(UClass* Class)
 {
-	return Class->HasMetaData(MetaTsuExtensionLibrary);
+	return Class->HasMetaData(MetaTsuExtension);
 }
 
 bool FTsuReflection::IsExplicitExtension(UFunction* Function)
 {
-	return Function->HasMetaData(MetaTsuExtensionLibrary) || IsExplicitExtension(Function->GetOuterUClass());
+	return (
+		Function->HasMetaData(MetaTsuExtension) ||
+		Function->HasMetaData(MetaTsuStaticExtension) ||
+		IsExplicitExtension(Function->GetOuterUClass())
+	);
 }
 
 bool FTsuReflection::IsExplicitExtension(UField* Field)
@@ -105,6 +110,11 @@ bool FTsuReflection::IsExtensionFunction(UFunction* Function)
 		!Function->HasMetaData(MetaNativeMakeFunc) &&
 		!Function->HasMetaData(MetaNativeBreakFunc)
 	);
+}
+
+bool FTsuReflection::IsStaticExtension(UFunction* Function)
+{
+	return Function->HasMetaData(MetaTsuStaticExtension);
 }
 
 bool FTsuReflection::IsInvalidClass(UClass* Class)
@@ -198,7 +208,7 @@ bool FTsuReflection::HasOutputParameters(UFunction* Function)
 
 bool FTsuReflection::IsInputParameter(UProperty* Param)
 {
-	constexpr uint64 Mask = CPF_Parm | CPF_OutParm | CPF_ConstParm | CPF_ReturnParm;
+	constexpr uint64 Mask = CPF_Parm | CPF_OutParm | CPF_ReturnParm;
 	return (Param->PropertyFlags & Mask) == CPF_Parm;
 }
 
@@ -324,7 +334,7 @@ void FTsuReflection::VisitBreakFunctions(const BreakVisitor& Visitor)
 		Visitor(Entry.Key, Entry.Value);
 }
 
-void FTsuReflection::VisitObjectProperties(
+void FTsuReflection::VisitProperties(
 	const PropertyVisitor& Visitor,
 	UStruct* Object,
 	bool bIncludeDerived)
@@ -356,11 +366,11 @@ void FTsuReflection::VisitObjectProperties(
 	if (bIncludeDerived)
 	{
 		if (UStruct* SuperStruct = Object->GetSuperStruct())
-			VisitObjectProperties(Visitor, SuperStruct, bIncludeDerived);
+			VisitProperties(Visitor, SuperStruct, bIncludeDerived);
 	}
 }
 
-void FTsuReflection::VisitObjectMethods(const MethodVisitor& Visitor, UStruct* Object)
+void FTsuReflection::VisitMethods(const MethodVisitor& Visitor, UStruct* Object)
 {
 	for (auto Function : TImmediateFieldRange<UFunction>(Object))
 	{
@@ -369,7 +379,7 @@ void FTsuReflection::VisitObjectMethods(const MethodVisitor& Visitor, UStruct* O
 	}
 }
 
-void FTsuReflection::VisitObjectExtensions(const ExtensionVisitor& Visitor, UStruct* Type)
+void FTsuReflection::VisitExtensionMethods(const ExtensionVisitor& Visitor, UStruct* Object)
 {
 	// #hack(#mihe): This should be dealt with using some sort of metadata
 	static const TMap<UStruct*, UStruct*> ExtensionLibraries =
@@ -390,20 +400,7 @@ void FTsuReflection::VisitObjectExtensions(const ExtensionVisitor& Visitor, UStr
 		{
 			for (auto Function : TImmediateFieldRange<UFunction>(Library))
 			{
-				if (!IsExtensionFunction(Function))
-					continue;
-
-				FParamIterator ParamIt{Function};
-				if (!ParamIt || IsOutputParameter(*ParamIt, true))
-					continue;
-
-				UStruct* Type = nullptr;
-				if (auto ObjectProp = Cast<UObjectPropertyBase>(*ParamIt))
-					Type = ObjectProp->PropertyClass;
-				else if (auto StructProp = Cast<UStructProperty>(*ParamIt))
-					Type = StructProp->Struct;
-
-				if (Type)
+				if (UStruct* Type = FindExtendedTypeNonStatic(Function))
 				{
 					bool bIsOverridden = false;
 					if (UStruct* LibraryOverride = ExtensionLibraries.FindRef(Type))
@@ -418,7 +415,34 @@ void FTsuReflection::VisitObjectExtensions(const ExtensionVisitor& Visitor, UStr
 		return Result;
 	}();
 
-	if (const TArray<UFunction*>* Functions = Cache.Find(Type))
+	if (const TArray<UFunction*>* Functions = Cache.Find(Object))
+	{
+		for (UFunction* Function : *Functions)
+			Visitor(Function);
+	}
+}
+
+void FTsuReflection::VisitStaticExtensionMethods(const StaticExtensionVisitor& Visitor, UStruct* Object)
+{
+	using FCache = TMap<UStruct*, TArray<UFunction*>>;
+
+	static const FCache Cache = [&]
+	{
+		FCache Result;
+
+		VisitFunctionLibraries([&](UClass* Library)
+		{
+			for (auto Function : TImmediateFieldRange<UFunction>(Library))
+			{
+				if (UStruct* Type = FindExtendedTypeStatic(Function))
+					Result.FindOrAdd(Type).Add(Function);
+			}
+		});
+
+		return Result;
+	}();
+
+	if (const TArray<UFunction*>* Functions = Cache.Find(Object))
 	{
 		for (UFunction* Function : *Functions)
 			Visitor(Function);
@@ -533,17 +557,17 @@ bool FTsuReflection::GetReferencesInType(UField* Type, FTsuTypeSet& OutReference
 
 	if (auto ObjectType = Cast<UStruct>(Type))
 	{
-		VisitObjectProperties([&](UProperty* Property, bool /*bIsReadOnly*/)
+		VisitProperties([&](UProperty* Property, bool /*bIsReadOnly*/)
 		{
 			GetReferencesInProperty(Property, OutReferences);
 		}, ObjectType);
 
-		VisitObjectMethods([&](UFunction* Function)
+		VisitMethods([&](UFunction* Function)
 		{
 			GetReferencesInFunction(Function, OutReferences);
 		}, ObjectType);
 
-		VisitObjectExtensions([&](UFunction* Function)
+		VisitExtensionMethods([&](UFunction* Function)
 		{
 			GetReferencesInFunction(Function, OutReferences);
 		}, ObjectType);
@@ -639,6 +663,66 @@ bool FTsuReflection::HasMakeFunction(UStruct* Struct)
 bool FTsuReflection::HasBreakFunction(UStruct* Struct)
 {
 	return FindBreakFunction(Struct) != nullptr;
+}
+
+UStruct* FTsuReflection::FindExtendedTypeNonStatic(UFunction* Function)
+{
+	if (!IsExtensionFunction(Function) || IsStaticExtension(Function))
+		return nullptr;
+
+	FParamIterator ParamIt{Function};
+	if (!ParamIt || !IsInputParameter(*ParamIt))
+		return nullptr;
+
+	UStruct* Type = nullptr;
+	if (auto ObjectProp = Cast<UObjectPropertyBase>(*ParamIt))
+		return ObjectProp->PropertyClass;
+	else if (auto StructProp = Cast<UStructProperty>(*ParamIt))
+		return StructProp->Struct;
+
+	return nullptr;
+}
+
+UStruct* FTsuReflection::FindExtendedTypeStatic(UFunction* Function)
+{
+	const FString& TypeName = Function->GetMetaData(MetaTsuStaticExtension);
+	if (TypeName.IsEmpty())
+		return nullptr;
+
+	UField* Type = FindTypeByName(TypeName);
+	if (!Type)
+	{
+		UE_LOG(LogTsuRuntime, Error, TEXT("Failed to find type '%s' for extension '%s::%s'"),
+			*TypeName,
+			*Function->GetOuter()->GetName(),
+			*Function->GetName());
+
+		return nullptr;
+	}
+
+	UStruct* Struct = Cast<UStruct>(Type);
+	if (!Struct)
+	{
+		UE_LOG(LogTsuRuntime, Error, TEXT("Non-object type '%s' for extension '%s::%s'"),
+			*TypeName,
+			*Function->GetOuter()->GetName(),
+			*Function->GetName());
+
+		return nullptr;
+	}
+
+	return Struct;
+}
+
+UStruct* FTsuReflection::FindExtendedType(UFunction* Function)
+{
+	if (UStruct* Type = FindExtendedTypeStatic(Function))
+		return Type;
+
+	if (UStruct* Type = FindExtendedTypeNonStatic(Function))
+		return Type;
+
+	return nullptr;
 }
 
 UField* FTsuReflection::FindTypeByName(const FString& TypeName)

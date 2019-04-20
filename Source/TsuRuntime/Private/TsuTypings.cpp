@@ -401,19 +401,24 @@ void FTsuTypings::WriteObject(FString& Output, UStruct* Struct)
 		*ExtendsStatement,
 		*ImplementsStatement);
 
-	FTsuReflection::VisitObjectProperties([&](UProperty* Property, bool bIsReadOnly)
+	FTsuReflection::VisitProperties([&](UProperty* Property, bool bIsReadOnly)
 	{
 		WriteProperty(Output, Property, bIsReadOnly);
 	}, Struct);
 
-	FTsuReflection::VisitObjectMethods([&](UFunction* Function)
+	FTsuReflection::VisitMethods([&](UFunction* Function)
 	{
 		WriteMethod(Output, Function);
 	}, Struct);
 
-	FTsuReflection::VisitObjectExtensions([&](UFunction* Function)
+	FTsuReflection::VisitExtensionMethods([&](UFunction* Function)
 	{
-		WriteExtension(Output, Struct, Function);
+		WriteExtensionMethod(Output, Function);
+	}, Struct);
+
+	FTsuReflection::VisitStaticExtensionMethods([&](UFunction* Function)
+	{
+		WriteStaticExtensionMethod(Output, Function);
 	}, Struct);
 
 	if (!bIsInterface)
@@ -451,7 +456,7 @@ void FTsuTypings::WriteObject(FString& Output, UStruct* Struct)
 	TSU_WRITELNF("export { %s };", *TypeName);
 }
 
-void FTsuTypings::WriteToolTip(FString& Output, UFunction* Function, bool bIsExtension, bool bIndent)
+void FTsuTypings::WriteToolTip(FString& Output, UFunction* Function, bool bSkipFirst, bool bIndent)
 {
 	FString ToolTip = Function->GetToolTipText().ToString();
 
@@ -468,7 +473,7 @@ void FTsuTypings::WriteToolTip(FString& Output, UFunction* Function, bool bIsExt
 					*Parameter->GetName(),
 					*DefaultValue));
 		}
-	}, Function, bIsExtension);
+	}, Function, bSkipFirst);
 
 	WriteToolTip(Output, ToolTip, bIndent);
 }
@@ -573,10 +578,10 @@ void FTsuTypings::WriteMethod(FString& Output, UFunction* Function)
 	TSU_WRITELN("");
 }
 
-void FTsuTypings::WriteExtension(FString& Output, UStruct* Type, UFunction* Function)
+void FTsuTypings::WriteExtensionMethod(FString& Output, UFunction* Function)
 {
 	WriteToolTip(Output, Function, true, true);
-	TSU_WRITEF("\t%s(", *TailorNameOfExtension(Type, Function));
+	TSU_WRITEF("\t%s(", *TailorNameOfExtension(Function));
 	WriteParameters(Output, Function, true);
 	TSU_WRITE("): ");
 	WriteReturns(Output, Function);
@@ -584,7 +589,18 @@ void FTsuTypings::WriteExtension(FString& Output, UStruct* Type, UFunction* Func
 	TSU_WRITELN("");
 }
 
-void FTsuTypings::WriteParameters(FString& Output, UFunction* Function, bool bIsExtension)
+void FTsuTypings::WriteStaticExtensionMethod(FString& Output, UFunction* Function)
+{
+	WriteToolTip(Output, Function, false, true);
+	TSU_WRITEF("\tstatic %s(", *TailorNameOfExtension(Function));
+	WriteParameters(Output, Function);
+	TSU_WRITE("): ");
+	WriteReturns(Output, Function);
+	TSU_WRITELN(";");
+	TSU_WRITELN("");
+}
+
+void FTsuTypings::WriteParameters(FString& Output, UFunction* Function, bool bSkipFirst)
 {
 	bool bIsRestOptional = FTsuReflection::IsK2Method(Function);
 
@@ -601,16 +617,15 @@ void FTsuTypings::WriteParameters(FString& Output, UFunction* Function, bool bIs
 		const TCHAR* OptionalToken = bIsRestOptional ? TEXT("?") : TEXT("");
 
 		TSU_WRITEF("%s%s: %s", *TailorNameOfField(Parameter), OptionalToken, *GetPropertyType(Parameter));
-	}, Function, bIsExtension);
+	}, Function, bSkipFirst);
 }
 
-void FTsuTypings::WriteReturns(FString& Output, UFunction* Function, bool bIsExtension)
+void FTsuTypings::WriteReturns(FString& Output, UFunction* Function, bool bSkipFirst)
 {
 	if (FTsuReflection::HasOutputParameters(Function))
 	{
 		TSU_WRITE("{ ");
 
-		bool bSkipNext = bIsExtension;
 		int32 NumWritten = 0;
 
 		for (UProperty* Parameter : FParamRange(Function))
@@ -618,9 +633,9 @@ void FTsuTypings::WriteReturns(FString& Output, UFunction* Function, bool bIsExt
 			if (!Parameter->HasAllPropertyFlags(CPF_Parm))
 				continue;
 
-			if (bSkipNext)
+			if (bSkipFirst)
 			{
-				bSkipNext = false;
+				bSkipFirst = false;
 				continue;
 			}
 
@@ -987,7 +1002,7 @@ const FString& FTsuTypings::TailorNameOfField(UField* Field)
 	return CachedName.Value;
 }
 
-const FString& FTsuTypings::TailorNameOfExtension(const UStruct* Type, UFunction* Function)
+const FString& FTsuTypings::TailorNameOfExtension(UFunction* Function)
 {
 	using FCachedName = TPair<FName, FString>;
 	using FCache = TMap<const UFunction*, FCachedName>;
@@ -1012,7 +1027,10 @@ const FString& FTsuTypings::TailorNameOfExtension(const UStruct* Type, UFunction
 		}
 		else
 		{
-			TrimRedundancy(FunctionName, Type->GetName());
+			UStruct* Type = FTsuReflection::FindExtendedType(Function);
+			if (ensure(Type != nullptr))
+				TrimRedundancy(FunctionName, Type->GetName());
+
 			TailorNameOfField(FunctionName);
 		}
 

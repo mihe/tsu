@@ -7,7 +7,7 @@
 
 #include "TsuRotatorLibrary.generated.h"
 
-UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtensionLibrary))
+UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtension))
 class UTsuRotatorLibrary final
 	: public UBlueprintFunctionLibrary
 {
@@ -257,7 +257,7 @@ public:
 	}
 
 	/** Generates a random rotation, with optional random roll. */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
 	static FRotator Random(bool bRoll = false)
 	{
 		return UKismetMathLibrary::RandomRotator(bRoll);
@@ -269,7 +269,7 @@ public:
 	 * @param Angle The angle to clamp.
 	 * @return The clamped angle.
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
 	static float ClampAxis(float Angle)
 	{
 		return FRotator::ClampAxis(Angle);
@@ -281,7 +281,7 @@ public:
 	 * @param Angle The Angle to clamp.
 	 * @return The clamped angle.
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
 	static float NormalizeAxis(float Angle)
 	{
 		return FRotator::NormalizeAxis(Angle);
@@ -293,20 +293,20 @@ public:
 	 * @param Angle The angle to compress.
 	 * @return The angle as a byte.
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
 	static uint8 CompressAxisToByte(float Angle)
 	{
 		return FRotator::CompressAxisToByte(Angle);
 	}
 
 	/**
-	 * Decompress a word into a floating point angle.
+	 * Decompress a byte into a floating point angle.
 	 *
-	 * @param Angle The word angle.
+	 * @param Angle The byte angle.
 	 * @return The decompressed angle.
 	 */
-	//UFUNCTION(BlueprintPure)
-	static float DecompressAxisFromByte(uint16 Angle)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
+	static float DecompressAxisFromByte(uint8 Angle)
 	{
 		return FRotator::DecompressAxisFromByte(Angle);
 	}
@@ -317,8 +317,8 @@ public:
 	 * @param Angle The angle to compress.
 	 * @return The decompressed angle.
 	 */
-	//UFUNCTION(BlueprintPure)
-	static uint16 CompressAxisToShort(float Angle)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
+	static int32 CompressAxisToShort(float Angle)
 	{
 		return FRotator::CompressAxisToShort(Angle);
 	}
@@ -329,8 +329,8 @@ public:
 	 * @param Angle The word angle.
 	 * @return The decompressed angle.
 	 */
-	//UFUNCTION(BlueprintPure)
-	static float DecompressAxisFromShort(uint16 Angle)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
+	static float DecompressAxisFromShort(int32 Angle)
 	{
 		return FRotator::DecompressAxisFromShort(Angle);
 	}
@@ -341,7 +341,7 @@ public:
 	 * @param Euler Euler angle vector.
 	 * @return A rotator from a Euler angle.
 	 */
-	//UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
 	static FRotator MakeFromEuler(FVector Euler)
 	{
 		return FRotator::MakeFromEuler(Euler);

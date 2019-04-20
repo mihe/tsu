@@ -9,7 +9,7 @@
 
 #include "TsuObjectLibrary.generated.h"
 
-UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtensionLibrary))
+UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtension))
 class UTsuObjectLibrary final
 	: public UBlueprintFunctionLibrary
 {
