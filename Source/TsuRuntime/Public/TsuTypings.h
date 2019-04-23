@@ -8,7 +8,7 @@ class TSURUNTIME_API FTsuTypings
 {
 	static const TCHAR* MetaHidden;
 	static const TCHAR* MetaDisplayName;
-	static const FName MetaTsuExtensionLibrary;
+	static const FName MetaScriptName;
 
 public:
 	static void WriteCoreTypings();

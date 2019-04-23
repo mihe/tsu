@@ -23,6 +23,7 @@
 
 const TCHAR* FTsuTypings::MetaHidden = TEXT("Hidden");
 const TCHAR* FTsuTypings::MetaDisplayName = TEXT("DisplayName");
+const FName FTsuTypings::MetaScriptName = TEXT("ScriptName");
 
 FString& FTsuTypings::ResetPersistentOutputBuffer()
 {
@@ -984,17 +985,28 @@ const FString& FTsuTypings::TailorNameOfField(UField* Field)
 		return Result;
 	}();
 
-	const FName FieldFName = Field->GetFName();
+	FName FieldFName = Field->GetFName();
 
 	FCachedName& CachedName = Cache.FindOrAdd(Field);
 	if (CachedName.Key != FieldFName)
 	{
-		FString FieldName = Field->GetName();
+		FString FieldName;
 
-		if (FTsuReflection::IsExplicitExtension(Field))
+		const FString& ScriptName = Field->GetMetaData(MetaScriptName);
+		if (!ScriptName.IsEmpty())
+		{
+			FieldName = ScriptName;
 			CamelCase(FieldName);
+		}
 		else
-			TailorNameOfField(FieldName);
+		{
+			FieldName = Field->GetName();
+
+			if (FTsuReflection::IsExplicitExtension(Field))
+				CamelCase(FieldName);
+			else
+				TailorNameOfField(FieldName);
+		}
 
 		CachedName = FCachedName(FieldFName, MoveTemp(FieldName));
 	}
