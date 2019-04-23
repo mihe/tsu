@@ -257,7 +257,7 @@ public:
 	 * @return The length of this vector.
 	 */
 	UFUNCTION(BlueprintPure)
-	static float Size(FVector Vector)
+	static float Length(FVector Vector)
 	{
 		return Vector.Size();
 	}
@@ -268,7 +268,7 @@ public:
 	 * @return The squared length of this vector.
 	 */
 	UFUNCTION(BlueprintPure)
-	static float SizeSquared(FVector Vector)
+	static float LengthSquared(FVector Vector)
 	{
 		return Vector.Size2D();
 	}
@@ -279,7 +279,7 @@ public:
 	 * @return The 2D length of this vector.
 	 */
 	UFUNCTION(BlueprintPure)
-	static float Size2D(FVector Vector)
+	static float Length2D(FVector Vector)
 	{
 		return Vector.Size2D();
 	}
@@ -290,7 +290,7 @@ public:
 	 * @return The squared 2D length of this vector.
 	 */
 	UFUNCTION(BlueprintPure)
-	static float SizeSquared2D(FVector Vector)
+	static float LengthSquared2D(FVector Vector)
 	{
 		return Vector.SizeSquared2D();
 	}
@@ -403,30 +403,30 @@ public:
 
 	/** Create a copy of this vector, with its magnitude clamped between Min and Max. */
 	UFUNCTION(BlueprintPure)
-	static FVector GetClampedToSize(FVector Vector, float Min, float Max)
+	static FVector GetClampedToLength(FVector Vector, float Min, float Max)
 	{
 		return Vector.GetClampedToSize(Min, Max);
 	}
 
 	/** Create a copy of this vector, with the 2D magnitude clamped between Min and Max. Z is unchanged. */
 	UFUNCTION(BlueprintPure)
-	static FVector GetClampedToSize2D(FVector Vector, float Min, float Max)
+	static FVector GetClampedToLength2D(FVector Vector, float Min, float Max)
 	{
 		return Vector.GetClampedToSize2D(Min, Max);
 	}
 
-	/** Create a copy of this vector, with its maximum magnitude clamped to MaxSize. */
+	/** Create a copy of this vector, with its maximum magnitude clamped to MaxLength. */
 	UFUNCTION(BlueprintPure)
-	static FVector GetClampedToMaxSize(FVector Vector, float MaxSize)
+	static FVector GetClampedToMaxLength(FVector Vector, float MaxLength)
 	{
-		return Vector.GetClampedToMaxSize(MaxSize);
+		return Vector.GetClampedToMaxSize(MaxLength);
 	}
 
-	/** Create a copy of this vector, with the maximum 2D magnitude clamped to MaxSize. Z is unchanged. */
+	/** Create a copy of this vector, with the maximum 2D magnitude clamped to MaxLength. Z is unchanged. */
 	UFUNCTION(BlueprintPure)
-	static FVector GetClampedToMaxSize2D(FVector Vector, float MaxSize)
+	static FVector GetClampedToMaxLength2D(FVector Vector, float MaxLength)
 	{
-		return Vector.GetClampedToMaxSize2D(MaxSize);
+		return Vector.GetClampedToMaxSize2D(MaxLength);
 	}
 
 	/**
@@ -491,7 +491,7 @@ public:
 	}
 
 	/**
-	 * Rotates around Axis (assumes Axis.Size() == 1).
+	 * Rotates around Axis (assumes Axis.Length() == 1).
 	 *
 	 * @param AngleDeg Angle to rotate (in degrees).
 	 * @param Axis Axis to rotate around.
