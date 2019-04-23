@@ -24,6 +24,7 @@
 const TCHAR* FTsuTypings::MetaHidden = TEXT("Hidden");
 const TCHAR* FTsuTypings::MetaDisplayName = TEXT("DisplayName");
 const FName FTsuTypings::MetaScriptName = TEXT("ScriptName");
+const FName FTsuTypings::MetaScriptMethod = TEXT("ScriptMethod");
 
 FString& FTsuTypings::ResetPersistentOutputBuffer()
 {
@@ -932,14 +933,22 @@ const FString& FTsuTypings::TailorNameOfType(UField* Type)
 	{
 		FString TypeName = Type->GetName();
 
-		if (auto Class = Cast<UClass>(Type))
+		const FString& ScriptName = Type->GetMetaData(MetaScriptName);
+		if (!ScriptName.IsEmpty())
 		{
-			if (Class == UObject::StaticClass())
-				TypeName = TEXT("UObject");
-			else if (Class == UFunction::StaticClass())
-				TypeName = TEXT("UFunction");
-			else if (auto GeneratedClass = Cast<UBlueprintGeneratedClass>(Class))
-				TypeName = GeneratedClass->ClassGeneratedBy->GetName();
+			TypeName = ScriptName;
+		}
+		else
+		{
+			if (auto Class = Cast<UClass>(Type))
+			{
+				if (Class == UObject::StaticClass())
+					TypeName = TEXT("UObject");
+				else if (Class == UFunction::StaticClass())
+					TypeName = TEXT("UFunction");
+				else if (auto GeneratedClass = Cast<UBlueprintGeneratedClass>(Class))
+					TypeName = GeneratedClass->ClassGeneratedBy->GetName();
+			}
 		}
 
 		CachedName = FCachedName(TypeFName, MoveTemp(TypeName));
@@ -990,22 +999,22 @@ const FString& FTsuTypings::TailorNameOfField(UField* Field)
 	FCachedName& CachedName = Cache.FindOrAdd(Field);
 	if (CachedName.Key != FieldFName)
 	{
-		FString FieldName;
+		FString FieldName = Field->GetName();
 
 		const FString& ScriptName = Field->GetMetaData(MetaScriptName);
+
 		if (!ScriptName.IsEmpty())
 		{
 			FieldName = ScriptName;
 			CamelCase(FieldName);
 		}
+		else if (FTsuReflection::IsExplicitExtension(Field))
+		{
+			CamelCase(FieldName);
+		}
 		else
 		{
-			FieldName = Field->GetName();
-
-			if (FTsuReflection::IsExplicitExtension(Field))
-				CamelCase(FieldName);
-			else
-				TailorNameOfField(FieldName);
+			TailorNameOfField(FieldName);
 		}
 
 		CachedName = FCachedName(FieldFName, MoveTemp(FieldName));
@@ -1033,7 +1042,20 @@ const FString& FTsuTypings::TailorNameOfExtension(UFunction* Function)
 	{
 		FString FunctionName = Function->GetName();
 
-		if (FTsuReflection::IsExplicitExtension(Function))
+		const FString& ScriptMethod = Function->GetMetaData(MetaScriptMethod);
+		const FString& ScriptName = Function->GetMetaData(MetaScriptName);
+
+		if (!ScriptMethod.IsEmpty())
+		{
+			FunctionName = ScriptMethod;
+			CamelCase(FunctionName);
+		}
+		else if (!ScriptName.IsEmpty())
+		{
+			FunctionName = ScriptName;
+			CamelCase(FunctionName);
+		}
+		else if (FTsuReflection::IsExplicitExtension(Function))
 		{
 			CamelCase(FunctionName);
 		}
