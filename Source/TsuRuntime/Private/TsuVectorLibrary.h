@@ -1044,4 +1044,60 @@ public:
 		Vector.Z = Value;
 		return Vector;
 	}
+
+	/** A zero vector (0,0,0) */
+	UFUNCTION(BlueprintPure, Meta=(TsuConstant="Vector"))
+	static FVector Zero()
+	{
+		return FVector::ZeroVector;
+	}
+
+	/** One vector (1,1,1) */
+	UFUNCTION(BlueprintPure, Meta=(TsuConstant="Vector"))
+	static FVector One()
+	{
+		return FVector::OneVector;
+	}
+
+	/** Unreal up vector (0,0,1) */
+	UFUNCTION(BlueprintPure, Meta=(TsuConstant="Vector"))
+	static FVector Up()
+	{
+		return FVector::UpVector;
+	}
+
+	/** Unreal down vector (0,0,-1) */
+	UFUNCTION(BlueprintPure, Meta=(TsuConstant="Vector"))
+	static FVector Down()
+	{
+		return FVector::DownVector;
+	}
+
+	/** Unreal forward vector (1,0,0) */
+	UFUNCTION(BlueprintPure, Meta=(TsuConstant="Vector"))
+	static FVector Forward()
+	{
+		return FVector::ForwardVector;
+	}
+
+	/** Unreal backward vector (-1,0,0) */
+	UFUNCTION(BlueprintPure, Meta=(TsuConstant="Vector"))
+	static FVector Backward()
+	{
+		return FVector::BackwardVector;
+	}
+
+	/** Unreal right vector (0,1,0) */
+	UFUNCTION(BlueprintPure, Meta=(TsuConstant="Vector"))
+	static FVector Right()
+	{
+		return FVector::RightVector;
+	}
+
+	/** Unreal left vector (0,-1,0) */
+	UFUNCTION(BlueprintPure, Meta=(TsuConstant="Vector"))
+	static FVector Left()
+	{
+		return FVector::LeftVector;
+	}
 };

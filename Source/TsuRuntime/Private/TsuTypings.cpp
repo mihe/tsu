@@ -26,6 +26,7 @@ const TCHAR* FTsuTypings::MetaDisplayName = TEXT("DisplayName");
 const FName FTsuTypings::MetaScriptName = TEXT("ScriptName");
 const FName FTsuTypings::MetaScriptMethod = TEXT("ScriptMethod");
 const FName FTsuTypings::MetaScriptOperator = TEXT("ScriptOperator");
+const FName FTsuTypings::MetaScriptConstant = TEXT("ScriptConstant");
 
 FString& FTsuTypings::ResetPersistentOutputBuffer()
 {
@@ -407,6 +408,11 @@ void FTsuTypings::WriteObject(FString& Output, UStruct* Struct)
 	FTsuReflection::VisitProperties([&](UProperty* Property, bool bIsReadOnly)
 	{
 		WriteProperty(Output, Property, bIsReadOnly);
+	}, Struct);
+
+	FTsuReflection::VisitExtensionConstants([&](UFunction* Function)
+	{
+		WriteStaticExtensionMethod(Output, Function);
 	}, Struct);
 
 	FTsuReflection::VisitMethods([&](UFunction* Function)
@@ -894,6 +900,10 @@ TOptional<FString> FTsuTypings::GetExplicitScriptMethodName(UFunction* Function)
 	const FString& ScriptName = Function->GetMetaData(MetaScriptMethod);
 	if (!ScriptName.IsEmpty())
 		return ScriptName;
+
+	const FString& ScriptConstant = Function->GetMetaData(MetaScriptConstant);
+	if (!ScriptConstant.IsEmpty())
+		return ScriptConstant;
 
 	const FString& ScriptOperator = Function->GetMetaData(MetaScriptOperator);
 	if (!ScriptOperator.IsEmpty())

@@ -463,4 +463,11 @@ public:
 		Rotator.Roll = Degrees;
 		return Rotator;
 	}
+
+	/** A rotator of zero degrees on each axis. */
+	UFUNCTION(BlueprintPure, Meta=(TsuConstant="Rotator"))
+	static FRotator ZeroRotator()
+	{
+		return FRotator::ZeroRotator;
+	}
 };

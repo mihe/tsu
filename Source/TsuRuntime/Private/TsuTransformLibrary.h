@@ -475,4 +475,13 @@ public:
 		Transform.SetRotation(FQuat(Rotation));
 		return Transform;
 	}
+
+	/**
+	 * The identity transformation (Rotation = FQuat::Identity, Translation = FVector::ZeroVector, Scale3D = (1,1,1)).
+	 */
+	UFUNCTION(BlueprintPure, Meta=(TsuConstant="Transform"))
+	static FTransform Identity()
+	{
+		return FTransform::Identity;
+	}
 };

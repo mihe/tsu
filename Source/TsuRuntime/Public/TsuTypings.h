@@ -11,6 +11,7 @@ class TSURUNTIME_API FTsuTypings
 	static const FName MetaScriptName;
 	static const FName MetaScriptMethod;
 	static const FName MetaScriptOperator;
+	static const FName MetaScriptConstant;
 
 public:
 	static void WriteCoreTypings();

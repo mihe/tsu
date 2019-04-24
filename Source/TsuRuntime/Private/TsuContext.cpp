@@ -512,6 +512,18 @@ v8::Local<v8::FunctionTemplate> FTsuContext::AddTemplate(UStruct* Type)
 		ConstructorTemplate->Set(Name, Callback);
 	}, Type);
 
+	FTsuReflection::VisitExtensionConstants([&](UFunction* Extension)
+	{
+		v8::Local<v8::String> Name = TCHAR_TO_V8(FTsuTypings::TailorNameOfExtension(Extension));
+
+		v8::Local<v8::FunctionTemplate> Callback = v8::FunctionTemplate::New(
+			Isolate,
+			&FTsuContext::_OnCallStaticMethod,
+			v8::External::New(Isolate, Extension));
+
+		ConstructorTemplate->Set(Name, Callback);
+	}, Type);
+
 	if (auto Class = Cast<UClass>(Type))
 	{
 		ConstructorTemplate->SetAccessorProperty(
