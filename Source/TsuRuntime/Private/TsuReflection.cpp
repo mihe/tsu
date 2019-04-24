@@ -19,6 +19,8 @@ const FName FTsuReflection::MetaWorldContext = TEXT("WorldContext");
 const FName FTsuReflection::MetaNativeMakeFunc = TEXT("NativeMakeFunc");
 const FName FTsuReflection::MetaNativeBreakFunc = TEXT("NativeBreakFunc");
 const FName FTsuReflection::MetaBlueprintInternalUseOnly = TEXT("BlueprintInternalUseOnly");
+const FName FTsuReflection::MetaScriptMethod = TEXT("ScriptMethod");
+const FName FTsuReflection::MetaScriptOperator = TEXT("ScriptOperator");
 const FName FTsuReflection::MetaTsuExtension = TEXT("TsuExtension");
 const FName FTsuReflection::MetaTsuStaticExtension = TEXT("TsuStaticExtension");
 
@@ -87,6 +89,8 @@ bool FTsuReflection::IsExplicitExtension(UFunction* Function)
 	return (
 		Function->HasMetaData(MetaTsuExtension) ||
 		Function->HasMetaData(MetaTsuStaticExtension) ||
+		Function->HasMetaData(MetaScriptMethod) ||
+		Function->HasMetaData(MetaScriptOperator) ||
 		IsExplicitExtension(Function->GetOuterUClass())
 	);
 }
@@ -143,17 +147,6 @@ bool FTsuReflection::IsExposedProperty(UProperty* Property)
 bool FTsuReflection::IsDelegateProperty(UProperty* Property)
 {
 	return Property->IsA<UDelegateProperty>() || Property->IsA<UMulticastDelegateProperty>();
-}
-
-bool FTsuReflection::HasDelegateParameter(UFunction* Function)
-{
-	for (UProperty* Param : FParamRange(Function))
-	{
-		if (Param->IsA<UDelegateProperty>() || Param->IsA<UMulticastDelegateProperty>())
-			return true;
-	}
-
-	return false;
 }
 
 bool FTsuReflection::IsReadOnlyProperty(UProperty* Property)
@@ -374,7 +367,7 @@ void FTsuReflection::VisitMethods(const MethodVisitor& Visitor, UStruct* Object)
 {
 	for (auto Function : TImmediateFieldRange<UFunction>(Object))
 	{
-		if (IsExposedFunction(Function) && !HasDelegateParameter(Function))
+		if (IsExposedFunction(Function) && !IsExplicitExtension(Function))
 			Visitor(Function);
 	}
 }
@@ -663,6 +656,16 @@ bool FTsuReflection::HasMakeFunction(UStruct* Struct)
 bool FTsuReflection::HasBreakFunction(UStruct* Struct)
 {
 	return FindBreakFunction(Struct) != nullptr;
+}
+
+UProperty* FTsuReflection::GetParameter(UFunction* Function, int32 Index)
+{
+	FParamIterator ParamIt{Function};
+
+	while (Index--)
+		++ParamIt;
+
+	return *ParamIt;
 }
 
 UStruct* FTsuReflection::FindExtendedTypeNonStatic(UFunction* Function)

@@ -25,6 +25,7 @@ const TCHAR* FTsuTypings::MetaHidden = TEXT("Hidden");
 const TCHAR* FTsuTypings::MetaDisplayName = TEXT("DisplayName");
 const FName FTsuTypings::MetaScriptName = TEXT("ScriptName");
 const FName FTsuTypings::MetaScriptMethod = TEXT("ScriptMethod");
+const FName FTsuTypings::MetaScriptOperator = TEXT("ScriptOperator");
 
 FString& FTsuTypings::ResetPersistentOutputBuffer()
 {
@@ -847,10 +848,128 @@ FString FTsuTypings::GetPropertyType(UProperty* Property, bool bIsReadOnly)
 	return Result;
 }
 
+FString FTsuTypings::GetPropertyTypeForSuffix(UProperty* Property)
+{
+	if (auto StringProp = Cast<UStrProperty>(Property))
+		return TEXT("String");
+
+	if (auto BoolProp = Cast<UBoolProperty>(Property))
+		return TEXT("Boolean");
+
+	if (auto NumericProp = Cast<UNumericProperty>(Property))
+	{
+		if (NumericProp->IsFloatingPoint())
+			return TEXT("Float");
+		else
+			return TEXT("Integer");
+	}
+
+	if (auto ObjectProp = Cast<UObjectPropertyBase>(Property))
+		return TailorNameOfType(ObjectProp->PropertyClass);
+
+	if (auto StructProp = Cast<UStructProperty>(Property))
+		return TailorNameOfType(StructProp->Struct);
+
+	checkNoEntry();
+	UE_LOG(LogTsuRuntime, Error, TEXT("Unhandled property type: '%s'"), *Property->GetClass()->GetName());
+	return TEXT("");
+}
+
+TOptional<FString> FTsuTypings::GetExplicitScriptName(UField* Field)
+{
+	// #hack(#mihe): The explicit names for enums seem to favor ditching the 'E' prefix. I prefer to keep it
+	// consistent with the non-explicit enum names, so we ignore the explicit enum names for now.
+	if (Field->IsA<UEnum>())
+		return {};
+
+	const FString& ScriptName = Field->GetMetaData(MetaScriptName);
+	if (!ScriptName.IsEmpty())
+		return ScriptName;
+	else
+		return {};
+}
+
+TOptional<FString> FTsuTypings::GetExplicitScriptMethodName(UFunction* Function)
+{
+	const FString& ScriptName = Function->GetMetaData(MetaScriptMethod);
+	if (!ScriptName.IsEmpty())
+		return ScriptName;
+
+	const FString& ScriptOperator = Function->GetMetaData(MetaScriptOperator);
+	if (!ScriptOperator.IsEmpty())
+	{
+		TArray<FString> Operators;
+		ScriptOperator.ParseIntoArray(Operators, TEXT(";"));
+
+		bool bIsBinaryOp = true;
+		FString OpName;
+
+		if (Operators.Contains(TEXT("+")))
+		{
+			OpName = TEXT("Add");
+		}
+		else if (Operators.Contains(TEXT("-")))
+		{
+			OpName = TEXT("Subtract");
+		}
+		else if (Operators.Contains(TEXT("*")))
+		{
+			OpName = TEXT("Multiply");
+		}
+		else if (Operators.Contains(TEXT("/")))
+		{
+			OpName = TEXT("Divide");
+		}
+		else if (Operators.Contains(TEXT("==")))
+		{
+			OpName = TEXT("Equals");
+		}
+		else if (Operators.Contains(TEXT("!=")))
+		{
+			OpName = TEXT("NotEqual");
+		}
+		else if (Operators.Contains(TEXT("|")))
+		{
+			OpName = TEXT("Dot");
+		}
+		else if (Operators.Contains(TEXT("^")))
+		{
+			OpName = TEXT("Cross");
+		}
+		else if (Operators.Contains(TEXT("bool")))
+		{
+			OpName = TEXT("IsValid");
+			bIsBinaryOp = false;
+		}
+		else
+		{
+			UE_LOG(LogTsuRuntime, Error, TEXT("Unhandled script operator: '%s'"), *ScriptOperator);
+			checkNoEntry();
+			return {};
+		}
+
+		if (bIsBinaryOp)
+		{
+			UProperty* FirstParam = FTsuReflection::GetParameter(Function, 0);
+			UProperty* SecondParam = FTsuReflection::GetParameter(Function, 1);
+
+			const FString FirstType = GetPropertyTypeForSuffix(FirstParam);
+			const FString SecondType = GetPropertyTypeForSuffix(SecondParam);
+
+			if (FirstType != SecondType)
+				OpName += SecondType;
+		}
+
+		return OpName;
+	}
+
+	return {};
+}
+
 FString& FTsuTypings::Deduplicate(FString& Name)
 {
 	if (Name.StartsWith(TEXT("EqualEqual_")))
-		Name = TEXT("Equal_") + Name.Mid(11);
+		Name = TEXT("Equals_") + Name.Mid(11);
 
 	static const FRegexPattern Pattern{TEXT("_([A-Za-z0-9]{2,})\\1$")};
 	FRegexMatcher Matcher{Pattern, Name};
@@ -875,6 +994,13 @@ FString& FTsuTypings::CamelCase(FString& Name)
 		Char = FChar::ToLower(Char);
 	}
 
+	return Name;
+}
+
+FString FTsuTypings::CamelCase(FString&& InName)
+{
+	FString Name = Forward<FString>(InName);
+	CamelCase(Name);
 	return Name;
 }
 
@@ -931,25 +1057,24 @@ const FString& FTsuTypings::TailorNameOfType(UField* Type)
 	FCachedName& CachedName = Cache.FindOrAdd(Type);
 	if (CachedName.Key != TypeFName)
 	{
-		FString TypeName = Type->GetName();
+		FString TypeName;
 
-		const FString& ScriptName = Type->GetMetaData(MetaScriptName);
-		if (!ScriptName.IsEmpty())
+		if (TOptional<FString> ScriptName = GetExplicitScriptName(Type))
 		{
-			TypeName = ScriptName;
+			TypeName = MoveTemp(ScriptName.GetValue());
 		}
-		else
+		else if (auto Class = Cast<UClass>(Type))
 		{
-			if (auto Class = Cast<UClass>(Type))
-			{
-				if (Class == UObject::StaticClass())
-					TypeName = TEXT("UObject");
-				else if (Class == UFunction::StaticClass())
-					TypeName = TEXT("UFunction");
-				else if (auto GeneratedClass = Cast<UBlueprintGeneratedClass>(Class))
-					TypeName = GeneratedClass->ClassGeneratedBy->GetName();
-			}
+			if (Class == UObject::StaticClass())
+				TypeName = TEXT("UObject");
+			else if (Class == UFunction::StaticClass())
+				TypeName = TEXT("UFunction");
+			else if (auto GeneratedClass = Cast<UBlueprintGeneratedClass>(Class))
+				TypeName = GeneratedClass->ClassGeneratedBy->GetName();
 		}
+
+		if (TypeName.IsEmpty())
+			TypeName = Type->GetName();
 
 		CachedName = FCachedName(TypeFName, MoveTemp(TypeName));
 	}
@@ -999,23 +1124,12 @@ const FString& FTsuTypings::TailorNameOfField(UField* Field)
 	FCachedName& CachedName = Cache.FindOrAdd(Field);
 	if (CachedName.Key != FieldFName)
 	{
-		FString FieldName = Field->GetName();
+		FString FieldName;
 
-		const FString& ScriptName = Field->GetMetaData(MetaScriptName);
-
-		if (!ScriptName.IsEmpty())
-		{
-			FieldName = ScriptName;
-			CamelCase(FieldName);
-		}
-		else if (FTsuReflection::IsExplicitExtension(Field))
-		{
-			CamelCase(FieldName);
-		}
+		if (TOptional<FString> ScriptName = GetExplicitScriptName(Field))
+			FieldName = CamelCase(MoveTemp(ScriptName.GetValue()));
 		else
-		{
-			TailorNameOfField(FieldName);
-		}
+			FieldName = TailorNameOfField(Field->GetName());
 
 		CachedName = FCachedName(FieldFName, MoveTemp(FieldName));
 	}
@@ -1040,27 +1154,24 @@ const FString& FTsuTypings::TailorNameOfExtension(UFunction* Function)
 	FCachedName& CachedName = Cache.FindOrAdd(Function);
 	if (CachedName.Key != FunctionFName)
 	{
-		FString FunctionName = Function->GetName();
+		FString FunctionName;
 
-		const FString& ScriptMethod = Function->GetMetaData(MetaScriptMethod);
-		const FString& ScriptName = Function->GetMetaData(MetaScriptName);
-
-		if (!ScriptMethod.IsEmpty())
+		if (TOptional<FString> ScriptMethod = GetExplicitScriptMethodName(Function))
 		{
-			FunctionName = ScriptMethod;
-			CamelCase(FunctionName);
+			FunctionName = CamelCase(MoveTemp(ScriptMethod.GetValue()));
 		}
-		else if (!ScriptName.IsEmpty())
+		else if (TOptional<FString> ScriptName = GetExplicitScriptName(Function))
 		{
-			FunctionName = ScriptName;
-			CamelCase(FunctionName);
+			FunctionName = CamelCase(MoveTemp(ScriptName.GetValue()));
 		}
 		else if (FTsuReflection::IsExplicitExtension(Function))
 		{
-			CamelCase(FunctionName);
+			FunctionName = CamelCase(Function->GetName());
 		}
 		else
 		{
+			FunctionName = Function->GetName();
+
 			UStruct* Type = FTsuReflection::FindExtendedType(Function);
 			if (ensure(Type != nullptr))
 				TrimRedundancy(FunctionName, Type->GetName());

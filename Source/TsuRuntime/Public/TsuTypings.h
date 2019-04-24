@@ -10,6 +10,7 @@ class TSURUNTIME_API FTsuTypings
 	static const TCHAR* MetaDisplayName;
 	static const FName MetaScriptName;
 	static const FName MetaScriptMethod;
+	static const FName MetaScriptOperator;
 
 public:
 	static void WriteCoreTypings();
@@ -34,6 +35,10 @@ public:
 	static bool SaveTypings(const FString& TypeName, const FString& Output);
 
 	static FString GetPropertyType(UProperty* Property, bool bIsReadOnly = false);
+	static FString GetPropertyTypeForSuffix(UProperty* Property);
+
+	static TOptional<FString> GetExplicitScriptName(UField* Field);
+	static TOptional<FString> GetExplicitScriptMethodName(UFunction* Function);
 
 	static const FString& TailorNameOfType(UField* Type);
 	static const FString& TailorNameOfField(UField* Field);
@@ -45,6 +50,7 @@ private:
 	static bool WriteTypings(UField* Type, const FTsuTypeSet& References);
 	static FString& Deduplicate(FString& Name);
 	static FString& CamelCase(FString& Name);
+	static FString CamelCase(FString&& Name);
 	static FString& AlphaNumerize(FString& Name);
 	static FString& TrimRedundancy(FString& Name, const FString& ParentName);
 	static FString& TailorNameOfField(FString& Name);

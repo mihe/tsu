@@ -10,6 +10,8 @@ class TSURUNTIME_API FTsuReflection
 	static const FName MetaNativeMakeFunc;
 	static const FName MetaNativeBreakFunc;
 	static const FName MetaBlueprintInternalUseOnly;
+	static const FName MetaScriptMethod;
+	static const FName MetaScriptOperator;
 	static const FName MetaTsuExtension;
 	static const FName MetaTsuStaticExtension;
 
@@ -41,7 +43,6 @@ public:
 	static bool IsValidClass(UClass* Class);
 	static bool IsExposedProperty(UProperty* Property);
 	static bool IsDelegateProperty(UProperty* Property);
-	static bool HasDelegateParameter(UFunction* Function);
 	static bool IsReadOnlyProperty(UProperty* Property);
 	static bool IsReferenceParameter(UProperty* Param);
 	static bool IsK2Method(const FString& FunctionName);
@@ -70,6 +71,8 @@ public:
 	static UFunction* FindBreakFunction(UStruct* Struct);
 	static bool HasMakeFunction(UStruct* Struct);
 	static bool HasBreakFunction(UStruct* Struct);
+
+	static UProperty* GetParameter(UFunction* Function, int32 Index);
 
 	static UStruct* FindExtendedTypeNonStatic(UFunction* Function);
 	static UStruct* FindExtendedTypeStatic(UFunction* Function);
