@@ -187,11 +187,8 @@ bool FTsuReflection::HasOutputParameters(UFunction* Function)
 	if (!Function->HasAllFunctionFlags(FUNC_HasOutParms))
 		return false;
 
-	for (UProperty* Param : FParamRange(Function))
+	for (UProperty* Param : FParamRange{Function})
 	{
-		if (!Param->HasAllPropertyFlags(CPF_Parm))
-			continue;
-
 		if (IsOutputParameter(Param))
 			return true;
 	}
@@ -201,8 +198,7 @@ bool FTsuReflection::HasOutputParameters(UFunction* Function)
 
 bool FTsuReflection::IsInputParameter(UProperty* Param)
 {
-	constexpr uint64 Mask = CPF_Parm | CPF_OutParm | CPF_ReturnParm;
-	return (Param->PropertyFlags & Mask) == CPF_Parm;
+	return (Param->PropertyFlags & CPF_Parm) && !IsOutputParameter(Param, true);
 }
 
 void FTsuReflection::VisitAllTypes(const TypeVisitor& Visitor)
@@ -336,7 +332,7 @@ void FTsuReflection::VisitProperties(
 
 	if (UFunction* BreakFunction = FindBreakFunction(Object))
 	{
-		for (UProperty* Parameter : FParamRange(BreakFunction))
+		for (UProperty* Parameter : FParamRange{BreakFunction})
 		{
 			if (IsOutputParameter(Parameter))
 				Visitor(Parameter, true);
@@ -454,7 +450,7 @@ bool FTsuReflection::VisitFunctionParameters(
 
 	bool bSkipNext = bSkipFirst;
 
-	for (UProperty* Parameter : FParamRange(Function))
+	for (UProperty* Parameter : FParamRange{Function})
 	{
 		if (!Parameter->HasAllPropertyFlags(CPF_Parm) || Parameter->HasAnyPropertyFlags(CPF_ReturnParm))
 			continue;
@@ -481,7 +477,7 @@ bool FTsuReflection::VisitFunctionParameters(
 
 void FTsuReflection::VisitFunctionReturns(const ReturnVisitor& Visitor, UFunction* Function)
 {
-	for (UProperty* Parameter : FParamRange(Function))
+	for (UProperty* Parameter : FParamRange{Function})
 	{
 		if (Parameter->HasAllPropertyFlags(CPF_OutParm))
 			Visitor(Parameter);
@@ -674,13 +670,18 @@ UStruct* FTsuReflection::FindExtendedTypeNonStatic(UFunction* Function)
 		return nullptr;
 
 	FParamIterator ParamIt{Function};
-	if (!ParamIt || !IsInputParameter(*ParamIt))
+	if (!ParamIt)
+		return nullptr;
+
+	UProperty* Param = *ParamIt;
+
+	if (!IsExplicitExtension(Function) && !IsInputParameter(Param))
 		return nullptr;
 
 	UStruct* Type = nullptr;
-	if (auto ObjectProp = Cast<UObjectPropertyBase>(*ParamIt))
+	if (auto ObjectProp = Cast<UObjectPropertyBase>(Param))
 		return ObjectProp->PropertyClass;
-	else if (auto StructProp = Cast<UStructProperty>(*ParamIt))
+	else if (auto StructProp = Cast<UStructProperty>(Param))
 		return StructProp->Struct;
 
 	return nullptr;
