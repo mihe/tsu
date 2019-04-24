@@ -5,6 +5,7 @@
 #include "TsuPaths.h"
 #include "TsuReflection.h"
 #include "TsuRuntimeLog.h"
+#include "TsuRuntimeSettings.h"
 #include "TsuStringConv.h"
 #include "TsuTryCatch.h"
 #include "TsuTypings.h"
@@ -54,7 +55,10 @@ FTsuContext::FTsuContext()
 	FCoreUObjectDelegates::GetPostGarbageCollect().AddRaw(this, &FTsuContext::OnPostGarbageCollect);
 
 	v8::Local<v8::Context> Context = v8::Context::New(Isolate);
-	Context->AllowCodeGenerationFromStrings(false);
+
+	auto Settings = GetDefault<UTsuRuntimeSettings>();
+	Context->AllowCodeGenerationFromStrings(Settings->bAllowCodeGenerationFromStrings);
+
 	Context->Enter();
 	GlobalContext.Reset(Isolate, Context);
 
