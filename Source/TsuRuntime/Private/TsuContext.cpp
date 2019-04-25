@@ -15,6 +15,7 @@
 #include "Engine/Engine.h"
 #include "HAL/PlatformFile.h"
 #include "HAL/PlatformFilemanager.h"
+#include "Misc/DefaultValueHelper.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Misc/ScopeExit.h"
@@ -1710,7 +1711,7 @@ void FTsuContext::WriteParameters(
 	int32 ArgIndex = 0;
 	FTsuReflection::VisitFunctionParameters([&](UProperty* Parameter)
 	{
-		bool bArgsConsumed = false;
+		bool bIsValidArg = true;
 
 		v8::Local<v8::Value> ArgValue;
 		if (Parameter->GetFName() == WorldContextName)
@@ -1719,25 +1720,23 @@ void FTsuContext::WriteParameters(
 		}
 		else
 		{
-			bArgsConsumed = ArgIndex >= NumArgs;
-			if (!bArgsConsumed)
+			bIsValidArg = ArgIndex < NumArgs;
+			if (bIsValidArg)
+			{
 				ArgValue = Info[ArgIndex++];
+				if (ArgValue->IsUndefined())
+					bIsValidArg = false;
+			}
 		}
 
-		void* ParamBuffer = Parameter->ContainerPtrToValuePtr<void>(ParamsBuffer);
-
-		if (!bArgsConsumed)
+		if (bIsValidArg)
 		{
-			WritePropertyToBuffer(Parameter, ArgValue, ParamBuffer);
+			WritePropertyToContainer(Parameter, ArgValue, ParamsBuffer);
 		}
 		else
 		{
-			const FString MetaDefaultValue = TEXT("CPP_Default_") + Parameter->GetName();
-			if (Method->HasMetaData(*MetaDefaultValue))
-			{
-				const FString& DefaultValue = Method->GetMetaData(*MetaDefaultValue);
-				Parameter->ImportText(*DefaultValue, ParamBuffer, PPF_None, nullptr);
-			}
+			void* ParamBuffer = Parameter->ContainerPtrToValuePtr<void>(ParamsBuffer);
+			WriteDefaultValue(Method, Parameter, ParamBuffer);
 		}
 	}, Method, false, false);
 }
@@ -1757,6 +1756,8 @@ void FTsuContext::WriteExtensionParameters(
 	int32 JsArgIndex = 0;
 	FTsuReflection::VisitFunctionParameters([&](UProperty* Parameter)
 	{
+		bool bIsValidArg = true;
+
 		v8::Local<v8::Value> ArgValue;
 
 		if (ArgIndex++ == 0)
@@ -1769,13 +1770,24 @@ void FTsuContext::WriteExtensionParameters(
 		}
 		else
 		{
-			if (JsArgIndex >= NumArgs)
-				return;
-
-			ArgValue = Info[JsArgIndex++];
+			bIsValidArg = JsArgIndex < NumArgs;
+			if (bIsValidArg)
+			{
+				ArgValue = Info[JsArgIndex++];
+				if (ArgValue->IsUndefined())
+					bIsValidArg = false;
+			}
 		}
 
-		WritePropertyToContainer(Parameter, ArgValue, ParamsBuffer);
+		if (bIsValidArg)
+		{
+			WritePropertyToContainer(Parameter, ArgValue, ParamsBuffer);
+		}
+		else
+		{
+			void* ParamBuffer = Parameter->ContainerPtrToValuePtr<void>(ParamsBuffer);
+			WriteDefaultValue(Method, Parameter, ParamBuffer);
+		}
 	}, Method, false, false);
 }
 
@@ -2057,6 +2069,61 @@ bool FTsuContext::WritePropertyToBuffer(
 	}
 
 	return true;
+}
+
+void FTsuContext::WriteDefaultValue(UFunction* Method, UProperty* Param, void* Buffer)
+{
+	const FString MetaDefaultValue = TEXT("CPP_Default_") + Param->GetName();
+	const FString& DefaultValue = Method->GetMetaData(*MetaDefaultValue);
+
+	if (DefaultValue.IsEmpty())
+	{
+		Param->InitializeValue(Buffer);
+		return;
+	}
+
+	auto StructParam = Cast<UStructProperty>(Param);
+	if (!StructParam)
+	{
+		Param->ImportText(*DefaultValue, Buffer, PPF_None, nullptr);
+		return;
+	}
+
+	if (StructParam->Struct == TBaseStructure<FVector>::Get())
+	{
+		auto Value = static_cast<FVector*>(Buffer);
+		FDefaultValueHelper::ParseVector(DefaultValue, *Value);
+	}
+	else if (StructParam->Struct == TBaseStructure<FVector2D>::Get())
+	{
+		auto Value = static_cast<FVector2D*>(Buffer);
+		FDefaultValueHelper::ParseVector2D(DefaultValue, *Value);
+	}
+	else if (StructParam->Struct == TBaseStructure<FVector4>::Get())
+	{
+		auto Value = static_cast<FVector4*>(Buffer);
+		FDefaultValueHelper::ParseVector4(DefaultValue, *Value);
+	}
+	else if (StructParam->Struct == TBaseStructure<FRotator>::Get())
+	{
+		auto Value = static_cast<FRotator*>(Buffer);
+		FDefaultValueHelper::ParseRotator(DefaultValue, *Value);
+	}
+	else if (StructParam->Struct == TBaseStructure<FLinearColor>::Get())
+	{
+		auto Value = static_cast<FLinearColor*>(Buffer);
+		FDefaultValueHelper::ParseLinearColor(DefaultValue, *Value);
+	}
+	else if (StructParam->Struct == TBaseStructure<FColor>::Get())
+	{
+		auto Value = static_cast<FColor*>(Buffer);
+		FDefaultValueHelper::ParseColor(DefaultValue, *Value);
+	}
+	else
+	{
+		UE_LOG(LogTsuRuntime, Error, TEXT("Unhandled type: %s"), *StructParam->Struct->GetName());
+		checkNoEntry();
+	}
 }
 
 v8::Local<v8::Value> FTsuContext::ReadPropertyFromContainer(UProperty* Property, const void* Buffer)

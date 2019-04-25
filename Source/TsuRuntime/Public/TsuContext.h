@@ -374,6 +374,16 @@ private:
 		v8::Local<v8::Value> Value,
 		void* Dest);
 
+	/**
+	 * Checks to see if the supplied parameter has a default value associated with it and writes said value to
+	 * it. If no default value is found it will simply call `UProperty::InitializeValue`.
+	 * 
+	 * @param Method The method to which the parameter belongs
+	 * @param Param The parameter to initialize
+	 * @param Buffer The buffer in which the value is to be stored
+	 */
+	void WriteDefaultValue(UFunction* Method, UProperty* Param, void* Buffer);
+
 	/** ... */
 	v8::Local<v8::Value> ReadPropertyFromContainer(UProperty* Property, const void* Source);
 
