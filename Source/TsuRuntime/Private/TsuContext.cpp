@@ -294,8 +294,6 @@ void FTsuContext::InitializeBuiltins()
 #else
 #error Not implemented
 #endif
-
-	DefineProperty(Global, u"__ue"_v8, v8::Object::New(Isolate));
 }
 
 void FTsuContext::InitializeDelegates()
