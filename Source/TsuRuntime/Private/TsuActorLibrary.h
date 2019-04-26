@@ -7,7 +7,7 @@
 
 #include "TsuActorLibrary.generated.h"
 
-UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtension))
+UCLASS(Meta=(BlueprintInternalUseOnly, TsuExtension))
 class UTsuActorLibrary final
 	: public UBlueprintFunctionLibrary
 {
@@ -19,7 +19,7 @@ public:
 	 * The Component must be owned by the Actor or else it will assert
 	 * In general this should not need to be called directly by anything other than UActorComponent functions
 	 */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void AddOwnedComponent(AActor* Actor, UActorComponent* Component)
 	{
 		Actor->AddOwnedComponent(Component);
@@ -29,21 +29,21 @@ public:
 	 * Removes a component from the OwnedComponents array of the Actor.
 	 * In general this should not need to be called directly by anything other than UActorComponent functions
 	 */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void RemoveOwnedComponent(AActor* Actor, UActorComponent* Component)
 	{
 		Actor->RemoveOwnedComponent(Component);
 	}
 
 	/** Adds a component to the instance components array */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void AddInstancedComponent(AActor* Actor, UActorComponent* Component)
 	{
 		Actor->AddInstanceComponent(Component);
 	}
 
 	/** Register this component, creating any rendering/physics state. Will also adds to outer Actor's Components array, if not already present. */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void RegisterComponent(UActorComponent* Component)
 	{
 		Component->RegisterComponent();

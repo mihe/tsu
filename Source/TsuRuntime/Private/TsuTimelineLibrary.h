@@ -15,7 +15,7 @@
 
 #include "TsuTimelineLibrary.generated.h"
 
-UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtension))
+UCLASS(Meta=(BlueprintInternalUseOnly, TsuExtension))
 class UTsuTimelineLibrary final
 	: public UBlueprintFunctionLibrary
 {
@@ -23,7 +23,7 @@ class UTsuTimelineLibrary final
 
 public:
 	/** */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void AddFloatCurve(
 		UTimelineComponent* Timeline,
 		FName TrackName,
@@ -33,7 +33,7 @@ public:
 	}
 
 	/** */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void AddVectorCurve(
 		UTimelineComponent* Timeline,
 		FName TrackName,
@@ -43,7 +43,7 @@ public:
 	}
 
 	/** */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void AddLinearColorCurve(
 		UTimelineComponent* Timeline,
 		FName TrackName,
@@ -53,7 +53,7 @@ public:
 	}
 
 	/** */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void RemoveFloatCurve(UTimelineComponent* Timeline, FName TrackName)
 	{
 		Timeline->TheTimeline.InterpFloats.RemoveAll(
@@ -64,7 +64,7 @@ public:
 	}
 
 	/** */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void RemoveVectorCurve(UTimelineComponent* Timeline, FName TrackName)
 	{
 		Timeline->TheTimeline.InterpVectors.RemoveAll(
@@ -75,7 +75,7 @@ public:
 	}
 
 	/** */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void RemoveLinearColorCurve(UTimelineComponent* Timeline, FName TrackName)
 	{
 		Timeline->TheTimeline.InterpLinearColors.RemoveAll(
@@ -86,7 +86,7 @@ public:
 	}
 
 	/** */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void SetOnFloatUpdate(UTimelineComponent* Timeline, FName TrackName, FOnTimelineFloat Callback)
 	{
 		FTimelineFloatTrack* FoundTrack = Timeline->TheTimeline.InterpFloats.FindByPredicate(
@@ -106,7 +106,7 @@ public:
 	}
 
 	/** */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void SetOnVectorUpdate(UTimelineComponent* Timeline, FName TrackName, FOnTimelineVector Callback)
 	{
 		FTimelineVectorTrack* FoundTrack = Timeline->TheTimeline.InterpVectors.FindByPredicate(
@@ -126,7 +126,7 @@ public:
 	}
 
 	/** */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void SetOnLinearColorUpdate(UTimelineComponent* Timeline, FName TrackName, FOnTimelineLinearColor Callback)
 	{
 		FTimelineLinearColorTrack* FoundTrack = Timeline->TheTimeline.InterpLinearColors.FindByPredicate(
@@ -146,7 +146,7 @@ public:
 	}
 
 	/** */
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintInternalUseOnly)
 	static void SetOnFinished(UTimelineComponent* Timeline, FOnTimelineEvent Callback)
 	{
 		Timeline->SetTimelineFinishedFunc(Callback);

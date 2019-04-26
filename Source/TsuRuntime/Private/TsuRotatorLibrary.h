@@ -7,7 +7,7 @@
 
 #include "TsuRotatorLibrary.generated.h"
 
-UCLASS(ClassGroup=TSU, BlueprintInternalUseOnly, Meta=(TsuExtension))
+UCLASS(Meta=(BlueprintInternalUseOnly, TsuExtension))
 class UTsuRotatorLibrary final
 	: public UBlueprintFunctionLibrary
 {
@@ -20,7 +20,7 @@ public:
 	 * @param Other The other rotator.
 	 * @return The result of adding a rotator to this.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator Add(FRotator Rotator, FRotator Other)
 	{
 		return Rotator + Other;
@@ -34,7 +34,7 @@ public:
 	 * @param DeltaRoll Change in roll. (+/-)
 	 * @return Copy of rotator after addition.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator AddFloats(FRotator Rotator, float DeltaPitch, float DeltaYaw, float DeltaRoll)
 	{
 		return Rotator.Add(DeltaPitch, DeltaYaw, DeltaRoll);
@@ -46,7 +46,7 @@ public:
 	 * @param Other The other rotator.
 	 * @return The result of subtracting a rotator from this.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator Subtract(FRotator Rotator, FRotator Other)
 	{
 		return Rotator - Other;
@@ -58,7 +58,7 @@ public:
 	 * @param Scale The scaling factor.
 	 * @return The result of scaling.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator Scale(FRotator Rotator, float Scale)
 	{
 		return Rotator * Scale;
@@ -71,7 +71,7 @@ public:
 	 * @param Tolerance Error Tolerance.
 	 * @return true if rotator is nearly zero, within specified tolerance, otherwise false.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static bool IsNearlyZero(FRotator Rotator, float Tolerance = 0.0001f)
 	{
 		return Rotator.IsNearlyZero(Tolerance);
@@ -83,7 +83,7 @@ public:
 	 *
 	 * @return true if this has exactly zero rotation, otherwise false.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static bool IsZero(FRotator Rotator)
 	{
 		return Rotator.IsZero();
@@ -97,7 +97,7 @@ public:
 	 * @param Tolerance Error Tolerance.
 	 * @return true if two rotators are equal, within specified tolerance, otherwise false.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static bool Equals(FRotator Rotator, FRotator Other, float Tolerance = 0.0001f)
 	{
 		return Rotator.Equals(Other, Tolerance);
@@ -106,7 +106,7 @@ public:
 	/**
 	 * Returns the inverse of the rotator.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator GetInverse(FRotator Rotator)
 	{
 		return Rotator.GetInverse();
@@ -118,7 +118,7 @@ public:
 	 * @param RotGrid A Rotator specifying how to snap each component.
 	 * @return Snapped version of rotation.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator GridSnap(FRotator Rotator, FRotator RotGrid)
 	{
 		return Rotator.GridSnap(RotGrid);
@@ -129,7 +129,7 @@ public:
 	 *
 	 * @return Rotation as a unit direction vector.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FVector ToVector(FRotator Rotator)
 	{
 		return Rotator.Vector();
@@ -140,7 +140,7 @@ public:
 	 *
 	 * @return Rotation as a quaternion.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FQuat ToQuaternion(FRotator Rotator)
 	{
 		return Rotator.Quaternion();
@@ -151,7 +151,7 @@ public:
 	 *
 	 * @return Rotation as a Euler angle vector.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FVector ToEuler(FRotator Rotator)
 	{
 		return Rotator.Euler();
@@ -163,7 +163,7 @@ public:
 	 * @param V The vector to rotate.
 	 * @return The rotated vector.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FVector RotateVector(FRotator Rotator, FVector V)
 	{
 		return Rotator.RotateVector(V);
@@ -175,7 +175,7 @@ public:
 	 * @param V The vector to rotate.
 	 * @return The rotated vector.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FVector UnrotateVector(FRotator Rotator, FVector V)
 	{
 		return Rotator.UnrotateVector(V);
@@ -186,7 +186,7 @@ public:
 	 *
 	 * @return Clamped version of rotator.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator Clamp(FRotator Rotator)
 	{
 		return Rotator.Clamp();
@@ -197,7 +197,7 @@ public:
 	 *
 	 * @return Normalized copy of this rotator
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator GetNormalized(FRotator Rotator)
 	{
 		return Rotator.GetNormalized();
@@ -208,7 +208,7 @@ public:
 	 *
 	 * @return Denormalized copy of this rotator
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator GetDenormalized(FRotator Rotator)
 	{
 		return Rotator.GetDenormalized();
@@ -221,7 +221,7 @@ public:
 	 * @param Winding[Out] the Winding part of this Rotator
 	 * @param Remainder[Out] the Remainder
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static void GetWindingAndRemainder(FRotator Rotator, FRotator& Winding, FRotator& Remainder)
 	{
 		return Rotator.GetWindingAndRemainder(Winding, Remainder);
@@ -232,14 +232,14 @@ public:
 	 *
 	 * @return Text describing the vector.
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FString ToString(FRotator Rotator)
 	{
 		return Rotator.ToString();
 	}
 
 	/** Get a short textural representation of this vector, for compact readable logging. */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FString ToCompactString(FRotator Rotator)
 	{
 		return Rotator.ToCompactString();
@@ -250,14 +250,14 @@ public:
 	 *
 	 * @return true if there are any non-finite values in this Rotator, otherwise false.
 	 */
-	UFUNCTION(BlueprintPure, Meta=(DisplayName="Contains NaN"))
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(DisplayName="Contains NaN"))
 	static bool ContainsNaN(FRotator Rotator)
 	{
 		return Rotator.ContainsNaN();
 	}
 
 	/** Generates a random rotation, with optional random roll. */
-	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(TsuStaticExtension="Rotator"))
 	static FRotator Random(bool bRoll = false)
 	{
 		return UKismetMathLibrary::RandomRotator(bRoll);
@@ -269,7 +269,7 @@ public:
 	 * @param Angle The angle to clamp.
 	 * @return The clamped angle.
 	 */
-	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(TsuStaticExtension="Rotator"))
 	static float ClampAxis(float Angle)
 	{
 		return FRotator::ClampAxis(Angle);
@@ -281,7 +281,7 @@ public:
 	 * @param Angle The Angle to clamp.
 	 * @return The clamped angle.
 	 */
-	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(TsuStaticExtension="Rotator"))
 	static float NormalizeAxis(float Angle)
 	{
 		return FRotator::NormalizeAxis(Angle);
@@ -293,7 +293,7 @@ public:
 	 * @param Angle The angle to compress.
 	 * @return The angle as a byte.
 	 */
-	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(TsuStaticExtension="Rotator"))
 	static uint8 CompressAxisToByte(float Angle)
 	{
 		return FRotator::CompressAxisToByte(Angle);
@@ -305,7 +305,7 @@ public:
 	 * @param Angle The byte angle.
 	 * @return The decompressed angle.
 	 */
-	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(TsuStaticExtension="Rotator"))
 	static float DecompressAxisFromByte(uint8 Angle)
 	{
 		return FRotator::DecompressAxisFromByte(Angle);
@@ -317,7 +317,7 @@ public:
 	 * @param Angle The angle to compress.
 	 * @return The decompressed angle.
 	 */
-	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(TsuStaticExtension="Rotator"))
 	static int32 CompressAxisToShort(float Angle)
 	{
 		return FRotator::CompressAxisToShort(Angle);
@@ -329,7 +329,7 @@ public:
 	 * @param Angle The word angle.
 	 * @return The decompressed angle.
 	 */
-	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(TsuStaticExtension="Rotator"))
 	static float DecompressAxisFromShort(int32 Angle)
 	{
 		return FRotator::DecompressAxisFromShort(Angle);
@@ -341,49 +341,49 @@ public:
 	 * @param Euler Euler angle vector.
 	 * @return A rotator from a Euler angle.
 	 */
-	UFUNCTION(BlueprintPure, Meta=(TsuStaticExtension="Rotator"))
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(TsuStaticExtension="Rotator"))
 	static FRotator MakeFromEuler(FVector Euler)
 	{
 		return FRotator::MakeFromEuler(Euler);
 	}
 
 	/** Get the reference frame direction vectors (axes) described by this rotation */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static void GetAxes(FRotator Rotator, FVector& X, FVector& Y, FVector& Z)
 	{
 		UKismetMathLibrary::GetAxes(Rotator, X, Y, Z);
 	}
 
 	/** Rotate the world forward vector by the given rotation */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FVector GetForwardVector(FRotator Rotator)
 	{
 		return UKismetMathLibrary::GetForwardVector(Rotator);
 	}
 
 	/** Rotate the world right vector by the given rotation */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FVector GetRightVector(FRotator Rotator)
 	{
 		return UKismetMathLibrary::GetRightVector(Rotator);
 	}
 
 	/** Rotate the world up vector by the given rotation */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FVector GetUpVector(FRotator Rotator)
 	{
 		return UKismetMathLibrary::GetUpVector(Rotator);
 	}
 
 	/** Linearly interpolates between A and B based on Alpha (100% of A when Alpha=0 and 100% of B when Alpha=1) */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator Lerp(FRotator Rotator, FRotator Other, float Alpha, bool bShortestPath)
 	{
 		return UKismetMathLibrary::RLerp(Rotator, Other, Alpha, bShortestPath);
 	}
 
 	/** Easeing  between A and B using a specified easing function */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator Ease(
 		FRotator Rotator,
 		FRotator Other,
@@ -412,7 +412,7 @@ public:
 	 * @param		InterpSpeed		Interpolation speed
 	 * @return		New interpolated position
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator InterpTo(FRotator Current, FRotator Target, float DeltaTime, float InterpSpeed)
 	{
 		return UKismetMathLibrary::RInterpTo(Current, Target, DeltaTime, InterpSpeed);
@@ -427,21 +427,21 @@ public:
 	 * @param		InterpSpeed		Interpolation speed
 	 * @return		New interpolated position
 	 */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator InterpToConstant(FRotator Current, FRotator Target, float DeltaTime, float InterpSpeed)
 	{
 		return UKismetMathLibrary::RInterpTo_Constant(Current, Target, DeltaTime, InterpSpeed);
 	}
 
 	/** Combine 2 rotations to give you the resulting rotation of first applying self, then other. */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator Compose(FRotator Rotator, FRotator Other)
 	{
 		return UKismetMathLibrary::ComposeRotators(Rotator, Other);
 	}
 
 	/** Copies the rotator, but with a new pitch value. */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator WithPitch(FRotator Rotator, float Degrees)
 	{
 		Rotator.Pitch = Degrees;
@@ -449,7 +449,7 @@ public:
 	}
 
 	/** Copies the rotator, but with a new yaw value. */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator WithYaw(FRotator Rotator, float Degrees)
 	{
 		Rotator.Yaw = Degrees;
@@ -457,7 +457,7 @@ public:
 	}
 
 	/** Copies the rotator, but with a new roll value. */
-	UFUNCTION(BlueprintPure)
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly)
 	static FRotator WithRoll(FRotator Rotator, float Degrees)
 	{
 		Rotator.Roll = Degrees;
@@ -465,7 +465,7 @@ public:
 	}
 
 	/** A rotator of zero degrees on each axis. */
-	UFUNCTION(BlueprintPure, Meta=(TsuConstant="Rotator"))
+	UFUNCTION(BlueprintPure, BlueprintInternalUseOnly, Meta=(TsuConstant="Rotator"))
 	static FRotator ZeroRotator()
 	{
 		return FRotator::ZeroRotator;
