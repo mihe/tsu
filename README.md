@@ -4,7 +4,7 @@ A scripting plugin for Unreal Engine 4 that lets you augment Blueprint with func
 
 Want to try it out? Check out the [examples project][tex].
 
-Need help with something? Join us on [Discord][dsc].
+Need help with something? Join us on [Discord][dsc] or the [forums][frm].
 
 ## Table of Contents
 
@@ -314,6 +314,7 @@ TypeScript for Unreal is licensed under the 3-clause BSD license. See the [LICEN
 [exd]: https://user-images.githubusercontent.com/4884246/54877939-a6c20380-4e25-11e9-8abe-78e037b0b23b.gif
 [exh]: https://user-images.githubusercontent.com/4884246/54877941-b3465c00-4e25-11e9-8ea2-eec26373a444.gif
 [ext]: https://user-images.githubusercontent.com/4884246/55279926-f66d6700-531e-11e9-8ec9-89b94bbf1343.png
+[frm]: https://forums.unrealengine.com/community/work-in-progress/1603304-typescript-for-unreal
 [htr]: https://user-images.githubusercontent.com/4884246/55280061-b7401580-5320-11e9-92b6-b23fbb565e2b.png
 [lds]: https://www.npmjs.com/package/lodash
 [lic]: LICENSE.md
