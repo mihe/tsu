@@ -17,8 +17,8 @@ public:
 
 #if WITH_EDITOR
 	UClass* GetBlueprintClass() const override;
-	bool SupportedByDefaultBlueprintFactory() const override { return false; }
-	bool AlwaysCompileOnLoad() const override { return true; }
+	bool SupportedByDefaultBlueprintFactory() const override;
+	bool AlwaysCompileOnLoad() const override;
 	void GatherDependencies(TSet<TWeakObjectPtr<UBlueprint>>& InDependencies) const override;
 	static bool ValidateGeneratedClass(const UClass* InClass);
 	bool IsCodeDirty() const;

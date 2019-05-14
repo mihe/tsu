@@ -40,6 +40,16 @@ bool UTsuBlueprint::ValidateGeneratedClass(const UClass* InClass)
 	return bResult;
 }
 
+bool UTsuBlueprint::SupportedByDefaultBlueprintFactory() const
+{
+	return false;
+}
+
+bool UTsuBlueprint::AlwaysCompileOnLoad() const
+{
+	return true;
+}
+
 bool UTsuBlueprint::IsCodeDirty() const
 {
 	if (!AssetImportData)
