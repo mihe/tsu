@@ -2,6 +2,9 @@
 
 #include "CoreMinimal.h"
 
+#include "GameFramework/Actor.h"
+#include "Templates/SubclassOf.h"
+
 using FTsuTypeSet = TSet<UField*>;
 
 class TSURUNTIME_API FTsuReflection
@@ -46,6 +49,7 @@ public:
 	static bool IsConstantExtension(UFunction* Function);
 	static bool IsInvalidClass(UClass* Class);
 	static bool IsValidClass(UClass* Class);
+	static bool IsAbstractClass(UClass* Class);
 	static bool IsExposedProperty(UProperty* Property);
 	static bool IsDelegateProperty(UProperty* Property);
 	static bool IsReadOnlyProperty(UProperty* Property);
@@ -66,12 +70,14 @@ public:
 	static void VisitExtensionMethods(const ExtensionVisitor& Visitor, UStruct* Object);
 	static void VisitStaticExtensionMethods(const StaticExtensionVisitor& Visitor, UStruct* Object);
 	static void VisitExtensionConstants(const ConstantVisitor& Visitor, UStruct* Object);
-	static bool VisitFunctionParameters(const ParameterVisitor& Visitor, UFunction* Function, bool bSkipFirst = false, bool bSkipWorldContext = true);
+	static void VisitFunctionParameters(const ParameterVisitor& Visitor, UFunction* Function, bool bSkipFirst = false, bool bSkipWorldContext = true);
 	static void VisitFunctionReturns(const ReturnVisitor& Visitor, UFunction* Function);
 	static void VisitPropertyType(const PropertyTypeVisitor& Visitor, UProperty* Property);
+	static void VisitSpawnParameters(const ParameterVisitor& Visitor, TSubclassOf<AActor> Actor);
 
 	static bool GetReferencesInType(UField* Type, FTsuTypeSet& OutReferences);
-	static void GetReferencesInFunction(UFunction* Function, FTsuTypeSet& OutReferences);
+	static void GetReferencesInClass(UClass* Class, FTsuTypeSet& OutReferences);
+	static void GetReferencesInFunction(UFunction * Function, FTsuTypeSet & OutReferences);
 	static void GetReferencesInProperty(UProperty* Property, FTsuTypeSet& OutReferences);
 
 	static UFunction* FindMakeFunction(UStruct* Struct);

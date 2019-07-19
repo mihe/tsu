@@ -382,7 +382,7 @@ void FTsuTypings::WriteObject(FString& Output, UStruct* Struct)
 	{
 		bIsClass = true;
 		bIsInterface = Class->IsChildOf<UInterface>();
-		bIsAbstractClass = Class->HasAnyClassFlags(CLASS_Abstract);
+		bIsAbstractClass = FTsuReflection::IsAbstractClass(Class);
 
 		if (Class->Interfaces.Num() > 0)
 		{
@@ -450,9 +450,37 @@ void FTsuTypings::WriteObject(FString& Output, UStruct* Struct)
 		{
 			TSU_WRITELN("\tprotected constructor();");
 		}
+		else if (Struct->IsChildOf<AActor>())
+		{
+			TSU_WRITELN("\t/** ... */");
+			TSU_WRITELN("\tstatic spawn(");
+			TSU_WRITELN("\t\ttransform: Transform,");
+			TSU_WRITELN("\t\tparams?: {");
+
+			FTsuReflection::VisitSpawnParameters([&](UProperty* Property)
+			{
+				TSU_WRITELNF("\t\t\t%s?: %s;", *TailorNameOfField(Property), *GetPropertyType(Property));
+			}, static_cast<UClass*>(Struct));
+
+			TSU_WRITELN("\t\t\towner?: Actor;");
+			TSU_WRITELN("\t\t\tcollisionHandlingOverride?: ESpawnActorCollisionHandlingMethod;");
+			TSU_WRITELN("\t\t}");
+			TSU_WRITELNF("\t): %s;", *TypeName);
+			TSU_WRITELN("");
+
+			TSU_WRITELN("\tprotected constructor();");
+		}
+		else if (Struct->IsChildOf<UActorComponent>())
+		{
+			TSU_WRITELN("\t/** ... */");
+			TSU_WRITELNF("\tstatic addTo(actor: Actor): %s;", *TypeName);
+			TSU_WRITELN("");
+			TSU_WRITELN("\tprotected constructor();");
+		}
 		else if (bIsClass)
 		{
-			TSU_WRITELN("\tpublic constructor(outer?: UObject | null);");
+			TSU_WRITELN("\t/** ... */");
+			TSU_WRITELN("\tpublic constructor(outer?: UObject);");
 		}
 		else
 		{

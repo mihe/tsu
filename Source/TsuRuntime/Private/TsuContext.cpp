@@ -15,6 +15,7 @@
 #include "Engine/Engine.h"
 #include "HAL/PlatformFile.h"
 #include "HAL/PlatformFilemanager.h"
+#include "Kismet/GameplayStatics.h"
 #include "Misc/DefaultValueHelper.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -412,7 +413,7 @@ v8::Local<v8::FunctionTemplate> FTsuContext::AddTemplate(UStruct* Type)
 	auto GetNonAbstractClassType = [](UStruct* Type)
 	{
 		auto ClassType = Cast<UClass>(Type);
-		return ClassType && !ClassType->HasAnyClassFlags(CLASS_Abstract) ? ClassType : nullptr;
+		return ClassType && !FTsuReflection::IsAbstractClass(ClassType) ? ClassType : nullptr;
 	};
 
 	v8::Local<v8::FunctionTemplate> ConstructorTemplate;
@@ -529,12 +530,33 @@ v8::Local<v8::FunctionTemplate> FTsuContext::AddTemplate(UStruct* Type)
 
 	if (auto Class = Cast<UClass>(Type))
 	{
-		ConstructorTemplate->SetAccessorProperty(
-			u"staticClass"_v8,
-			v8::FunctionTemplate::New(
+		{
+			v8::Local<v8::FunctionTemplate> Callback = v8::FunctionTemplate::New(
 				Isolate,
 				&FTsuContext::_OnGetStaticClass,
-				v8::External::New(Isolate, Class)));
+				v8::External::New(Isolate, Class));
+
+			ConstructorTemplate->SetAccessorProperty(u"staticClass"_v8, Callback);
+		}
+
+		if (Class->IsChildOf<AActor>())
+		{
+			v8::Local<v8::FunctionTemplate> Callback = v8::FunctionTemplate::New(
+				Isolate,
+				&FTsuContext::_OnActorSpawn,
+				v8::External::New(Isolate, Class));
+
+			ConstructorTemplate->Set(u"spawn"_v8, Callback);
+		}
+		else if (Class->IsChildOf<UActorComponent>())
+		{
+			v8::Local<v8::FunctionTemplate> Callback = v8::FunctionTemplate::New(
+				Isolate,
+				&FTsuContext::_OnActorComponentAddTo,
+				v8::External::New(Isolate, Class));
+
+			ConstructorTemplate->Set(u"addTo"_v8, Callback);
+		}
 
 		if (UStruct* Super = Class->GetSuperStruct())
 			ConstructorTemplate->Inherit(FindOrAddTemplate(Super));
@@ -934,19 +956,21 @@ void FTsuContext::OnConsoleTimeEnd(const v8::FunctionCallbackInfo<v8::Value>& In
 
 void FTsuContext::OnClassNew(const v8::FunctionCallbackInfo<v8::Value>& Info)
 {
-	UClass* Type = nullptr;
-	if (!ensureV8(GetExternalValue(Info.Data(), &Type)))
+	UClass* Class = nullptr;
+	if (!ensureV8(GetExternalValue(Info.Data(), &Class)))
 		return;
 
 	UObject* Outer = nullptr;
 	v8::Local<v8::Value> OuterArg = Info[0];
 	if (OuterArg->IsObject())
 		GetInternalFields(OuterArg, &Outer);
-
-	if (!Outer)
+	else
 		Outer = GetTransientPackage();
 
-	Info.GetReturnValue().Set(ReferenceClassObject(StaticConstructObject_Internal(Type, Outer)));
+	UObject* Object = StaticConstructObject_Internal(Class, Outer);
+	v8::Local<v8::Value> ReturnValue = ReferenceClassObject(Object);
+
+	Info.GetReturnValue().Set(ReturnValue);
 }
 
 void FTsuContext::OnStructNew(const v8::FunctionCallbackInfo<v8::Value>& Info)
@@ -1495,6 +1519,82 @@ void FTsuContext::OnGetStaticClass(const v8::FunctionCallbackInfo<v8::Value>& In
 		return;
 
 	Info.GetReturnValue().Set(ReferenceClassObject(Class));
+}
+
+void FTsuContext::OnActorSpawn(const v8::FunctionCallbackInfo<v8::Value>& Info)
+{
+	v8::Local<v8::Context> Context = GlobalContext.Get(Isolate);
+
+	UClass* Class = nullptr;
+	if (!ensureV8(GetExternalValue(Info.Data(), &Class)))
+		return;
+
+	FTransform* Transform = nullptr;
+	GetInternalFields(Info[0], &Transform);
+
+	v8::Local<v8::Value> ParamsValue = Info[1];
+
+	ESpawnActorCollisionHandlingMethod CollisionHandling = ESpawnActorCollisionHandlingMethod::Undefined;
+	AActor* Owner = nullptr;
+	if (ParamsValue->IsObject())
+	{
+		v8::Local<v8::Object> ParamsObject = ParamsValue.As<v8::Object>();
+		v8::MaybeLocal<v8::Value> MaybeCollisionValue = ParamsObject->Get(Context, u"collisionHandlingOverride"_v8);
+		v8::Local<v8::Value> CollisionValue;
+		if (MaybeCollisionValue.ToLocal(&CollisionValue) && CollisionValue->IsUint32())
+			CollisionHandling = (ESpawnActorCollisionHandlingMethod)CollisionValue.As<v8::Uint32>()->Value();
+
+		v8::MaybeLocal<v8::Value> MaybeOwnerValue = ParamsObject->Get(Context, u"owner"_v8);
+		v8::Local<v8::Value> OwnerValue;
+		if (MaybeOwnerValue.ToLocal(&OwnerValue) && OwnerValue->IsObject())
+			GetInternalFields(OwnerValue, &Owner);
+	}
+
+	v8::Local<v8::Value> WorldContextValue = GetWorldContext();
+	UObject* WorldContext = nullptr;
+	GetInternalFields(WorldContextValue, &WorldContext);
+
+	AActor* Actor = UGameplayStatics::BeginDeferredActorSpawnFromClass(
+		WorldContext,
+		Class,
+		*Transform,
+		CollisionHandling,
+		Owner);
+
+	if (ParamsValue->IsObject())
+	{
+		v8::Local<v8::Object> ParamsObject = ParamsValue.As<v8::Object>();
+
+		FTsuReflection::VisitSpawnParameters([&](UProperty* Property)
+		{
+			const FString& PropertyName = FTsuTypings::TailorNameOfField(Property);
+			v8::MaybeLocal<v8::Value> MaybePropertyValue = ParamsObject->Get(Context, TCHAR_TO_V8(PropertyName));
+			v8::Local<v8::Value> PropertyValue;
+			if (MaybePropertyValue.ToLocal(&PropertyValue) && !PropertyValue->IsUndefined())
+				WritePropertyToContainer(Property, PropertyValue, Actor);
+		}, Class);
+	}
+
+	Actor = UGameplayStatics::FinishSpawningActor(Actor, *Transform);
+	check(Actor != nullptr);
+
+	Info.GetReturnValue().Set(ReferenceClassObject(Actor));
+}
+
+void FTsuContext::OnActorComponentAddTo(const v8::FunctionCallbackInfo<v8::Value>& Info)
+{
+	UClass* Class = nullptr;
+	if (!ensureV8(GetExternalValue(Info.Data(), &Class)))
+		return;
+
+	AActor* Outer = nullptr;
+	GetInternalFields(Info[0], &Outer);
+
+	auto Component = static_cast<UActorComponent*>(StaticConstructObject_Internal(Class, Outer));
+	Component->RegisterComponent();
+	Outer->AddOwnedComponent(Component);
+
+	Info.GetReturnValue().Set(ReferenceClassObject(Component));
 }
 
 void FTsuContext::OnDelegateBind(const v8::FunctionCallbackInfo<v8::Value>& Info)

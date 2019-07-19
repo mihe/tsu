@@ -146,6 +146,11 @@ bool FTsuReflection::IsValidClass(UClass* Class)
 	return !IsInvalidClass(Class);
 }
 
+bool FTsuReflection::IsAbstractClass(UClass* Class)
+{
+	return Class->HasAnyClassFlags(CLASS_Abstract);
+}
+
 bool FTsuReflection::IsExposedProperty(UProperty* Property)
 {
 	return Property->HasAnyPropertyFlags(
@@ -478,7 +483,7 @@ void FTsuReflection::VisitExtensionConstants(const ConstantVisitor& Visitor, USt
 	}
 }
 
-bool FTsuReflection::VisitFunctionParameters(
+void FTsuReflection::VisitFunctionParameters(
 	const ParameterVisitor& Visitor,
 	UFunction* Function,
 	bool bSkipFirst,
@@ -511,8 +516,6 @@ bool FTsuReflection::VisitFunctionParameters(
 
 		Visitor(Parameter);
 	}
-
-	return true;
 }
 
 void FTsuReflection::VisitFunctionReturns(const ReturnVisitor& Visitor, UFunction* Function)
@@ -576,6 +579,21 @@ void FTsuReflection::VisitPropertyType(const PropertyTypeVisitor& Visitor, UProp
 	}
 }
 
+void FTsuReflection::VisitSpawnParameters(const ParameterVisitor& Visitor, TSubclassOf<AActor> Actor)
+{
+	TFieldRange<UProperty> Properties{
+		*Actor,
+		EFieldIteratorFlags::IncludeSuper,
+		EFieldIteratorFlags::ExcludeDeprecated,
+		EFieldIteratorFlags::ExcludeInterfaces};
+
+	for (auto Property : Properties)
+	{
+		if (Property->HasAllPropertyFlags(CPF_ExposeOnSpawn))
+			Visitor(Property);
+	}
+}
+
 bool FTsuReflection::GetReferencesInType(UField* Type, FTsuTypeSet& OutReferences)
 {
 	if (auto Class = Cast<UClass>(Type))
@@ -602,8 +620,6 @@ bool FTsuReflection::GetReferencesInType(UField* Type, FTsuTypeSet& OutReference
 		}, ObjectType);
 	}
 
-	OutReferences.Remove(Type);
-
 	if (auto Struct = Cast<UStruct>(Type))
 	{
 		if (UStruct* SuperStruct = Struct->GetSuperStruct())
@@ -611,22 +627,57 @@ bool FTsuReflection::GetReferencesInType(UField* Type, FTsuTypeSet& OutReference
 	}
 
 	if (auto Class = Cast<UClass>(Type))
-	{
-		// For the optional 'outer' parameter in the constructor
-		UClass* Class_UObject = UObject::StaticClass();
-		if (Class != Class_UObject)
-			OutReferences.Add(Class_UObject);
+		GetReferencesInClass(Class, OutReferences);
 
-		// For the 'staticClass' member
-		UClass* Class_UClass = UClass::StaticClass();
-		if (Class != Class_UClass)
-			OutReferences.Add(Class_UClass);
-
-		for (FImplementedInterface& Interface : Class->Interfaces)
-			OutReferences.Add(Interface.Class);
-	}
+	// #note(#mihe): Keep this at the bottom
+	OutReferences.Remove(Type);
 
 	return true;
+}
+
+void FTsuReflection::GetReferencesInClass(UClass* Class, FTsuTypeSet& OutReferences)
+{
+	// For the 'staticClass' member
+	static UClass* Class_UClass = UClass::StaticClass();
+	OutReferences.Add(Class_UClass);
+
+	if (Class->IsChildOf<AActor>())
+	{
+		// For the parameters of the 'spawn' method
+
+		static UScriptStruct* Struct_Transform = TBaseStructure<FTransform>::Get();
+		OutReferences.Add(Struct_Transform);
+
+		static UEnum* Enum_SpawnActorCollisionHandlingMethod = FindObject<UEnum>(
+			ANY_PACKAGE,
+			GET_TYPE_NAME_CHECKED(ESpawnActorCollisionHandlingMethod),
+			true);
+
+		OutReferences.Add(Enum_SpawnActorCollisionHandlingMethod);
+
+		static UClass* Class_Actor = AActor::StaticClass();
+		OutReferences.Add(Class_Actor);
+
+		FTsuReflection::VisitSpawnParameters([&](UProperty * Property)
+		{
+			GetReferencesInProperty(Property, OutReferences);
+		}, Class);
+	}
+	else if (Class->IsChildOf<UActorComponent>())
+	{
+		// For the 'actor' parameter of the 'addTo' method
+		static UClass* Class_Actor = AActor::StaticClass();
+		OutReferences.Add(Class_Actor);
+	}
+	else
+	{
+		// For the 'outer' constructor parameter
+		static UClass* Class_UObject = UObject::StaticClass();
+		OutReferences.Add(Class_UObject);
+	}
+
+	for (FImplementedInterface& Interface : Class->Interfaces)
+		OutReferences.Add(Interface.Class);
 }
 
 void FTsuReflection::GetReferencesInFunction(UFunction* Function, FTsuTypeSet& OutReferences)

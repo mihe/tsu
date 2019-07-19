@@ -230,6 +230,12 @@ private:
 	TSU_CONTEXT_CALLBACK(OnConsoleTrace);
 
 	/** ... */
+	TSU_CONTEXT_CALLBACK(OnConsoleTimeBegin);
+
+	/** ... */
+	TSU_CONTEXT_CALLBACK(OnConsoleTimeEnd);
+
+	/** ... */
 	TSU_CONTEXT_CALLBACK(OnClassNew);
 
 	/** ... */
@@ -243,12 +249,6 @@ private:
 
 	/** ... */
 	TSU_CONTEXT_CALLBACK(OnCallExtensionMethod);
-
-	/** ... */
-	TSU_CONTEXT_CALLBACK(OnConsoleTimeBegin);
-
-	/** ... */
-	TSU_CONTEXT_CALLBACK(OnConsoleTimeEnd);
 
 	/** ... */
 	TSU_CONTEXT_CALLBACK(OnPropertyGet);
@@ -306,6 +306,12 @@ private:
 
 	/** ... */
 	TSU_CONTEXT_CALLBACK(OnGetStaticClass);
+
+	/** ... */
+	TSU_CONTEXT_CALLBACK(OnActorSpawn);
+
+	/** ... */
+	TSU_CONTEXT_CALLBACK(OnActorComponentAddTo);
 
 	/** ... */
 	TSU_CONTEXT_CALLBACK(OnDelegateBind);
