@@ -1,10 +1,10 @@
 # ![TypeScript for Unreal][bnr]
 
+**TypeScript for Unreal is no longer in active development.**
+
 A scripting plugin for Unreal Engine 4 that lets you augment Blueprint with functions written in [TypeScript][tsc].
 
 Want to try it out? Check out the [examples project][tex].
-
-Need help with something? Join us on [Discord][dsc] or the [forums][frm].
 
 ## Table of Contents
 
@@ -77,17 +77,12 @@ Battle-tested technologies make up the foundation of TSU, such as the V8 JavaScr
 
 ## Downloads
 
-_(TSU is not currently on [Unreal Marketplace][mkt], but will be once it's in beta)._
-
-Please note that **currently**...
+Please note that...
 
 - TSU is in **alpha**
 - TSU has **only** been tested with **Unreal Engine 4.22**
 - You can **not** use TSU outside of Win64 **editor** builds
 - You can **not** use TSU in packaged/cooked builds
-- There **will** be breaking changes in upcoming versions
-
-Hopefully all of these issues will be resolved soon, but please be aware of them before downloading.
 
 If you still want to try it, head over to [Releases][rls].
 
@@ -308,13 +303,11 @@ npm run build
 TypeScript for Unreal is licensed under the 3-clause BSD license. See the [LICENSE][lic] file for details.
 
 [bnr]: https://user-images.githubusercontent.com/4884246/54883366-87e36180-4e65-11e9-8bc9-5fdb6b5cd462.png
-[dsc]: https://discord.gg/QPrNpAQ
 [edt]: https://user-images.githubusercontent.com/4884246/55287744-3549fe00-53ad-11e9-97f4-a26a0960864f.png
 [exb]: https://user-images.githubusercontent.com/4884246/54877994-5e571580-4e26-11e9-87ee-a4947f916ceb.png
 [exd]: https://user-images.githubusercontent.com/4884246/54877939-a6c20380-4e25-11e9-8abe-78e037b0b23b.gif
 [exh]: https://user-images.githubusercontent.com/4884246/54877941-b3465c00-4e25-11e9-8ea2-eec26373a444.gif
 [ext]: https://user-images.githubusercontent.com/4884246/55279926-f66d6700-531e-11e9-8ec9-89b94bbf1343.png
-[frm]: https://forums.unrealengine.com/community/work-in-progress/1603304-typescript-for-unreal
 [htr]: https://user-images.githubusercontent.com/4884246/55280061-b7401580-5320-11e9-92b6-b23fbb565e2b.png
 [lds]: https://www.npmjs.com/package/lodash
 [lic]: LICENSE.md
